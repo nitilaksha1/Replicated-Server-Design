@@ -60,7 +60,7 @@ public class BankHandler implements BankService.Iface {
 		this.id = id;
 	}
 
-	public void getID(int id){
+	public int getID(int id){
 		return this.id;
 	}
         @Override

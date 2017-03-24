@@ -8,22 +8,29 @@ import org.apache.thrift.transport.TSocket;
 import org.apache.thrift.transport.TTransportFactory;
 import org.apache.thrift.server.TThreadPoolServer;
 import org.apache.thrift.transport.TFramedTransport;
-
+import java.io.*;
+import java.util.*;
 @SuppressWarnings({"cast", "rawtypes", "serial", "unchecked", "unused"})
 public class BankServer {
 
 	public static BankHandler handler;
 	public static BankService.Processor processor;
+        public static int serverportnumber;
+
+  	public BankServer(){
+           serverportnumber = 9999;
+	}
 
   public static void main(String [] args) {
     if (args.length != 2) {
 	  System.exit(1);
     }
      int id = Integer.parseInt(args[0]);
-     int serverportnumber = 9999;
+     
+
      String filename = args[1];
      int numberOfAccounts = 10;		
-
+     try{	
      Scanner scan = new Scanner (new File(filename));
      scan.nextLine();
 		
@@ -33,14 +40,15 @@ public class BankServer {
 	int portnumber = scan.nextInt();
 			
 	if (id == fid) {
-		serverportnumber = portnumber;
+		BankServer.serverportnumber = portnumber;
 		break;
 	   }
 				
 	}
-		
-	//Rest of server logic
-	scan.close();
+       
+       scan.close();
+     }catch(FileNotFoundException e){e.printStackTrace();}
+    
 
     try {
       handler = new BankHandler();
@@ -52,7 +60,7 @@ public class BankServer {
 
       Runnable simple = new Runnable() {
         public void run() {
-          someMethod(processor,portnumber);
+          someMethod(processor,BankServer.serverportnumber);
         }
       };      
      
