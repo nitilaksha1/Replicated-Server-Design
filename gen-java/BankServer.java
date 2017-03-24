@@ -13,49 +13,58 @@ import java.util.*;
 @SuppressWarnings({"cast", "rawtypes", "serial", "unchecked", "unused"})
 public class BankServer {
 
-	public static BankHandler handler;
-	public static BankService.Processor processor;
-        public static int serverportnumber;
+	public static ReplicatedServerHandler handler;
+	public static ReplicatedBankService.Processor processor;
+    public static int serverportnumber;
 
   	public BankServer(){
            serverportnumber = 9999;
 	}
 
   public static void main(String [] args) {
-    if (args.length != 2) {
+    
+	if (args.length != 2) {
 	  System.exit(1);
     }
-     int id = Integer.parseInt(args[0]);
-     
+
+    int id = Integer.parseInt(args[0]);
 
      String filename = args[1];
      int numberOfAccounts = 10;		
+
      try{	
-     Scanner scan = new Scanner (new File(filename));
-     scan.nextLine();
-		
-     while (scan.hasNext()) {
-	String hostname = scan.next();
-	int fid = scan.nextInt();
-	int portnumber = scan.nextInt();
+		 Scanner scan = new Scanner (new File(filename));
+		 scan.nextLine();
 			
-	if (id == fid) {
-		BankServer.serverportnumber = portnumber;
-		break;
-	   }
-				
-	}
+		 while (scan.hasNext()) {
+			int fid = scan.nextInt();
+			int portnumber = scan.nextInt();
+					
+			if (id == fid) {
+				BankServer.serverportnumber = portnumber;
+				break;
+			   }
+					
+		 }
        
-       scan.close();
-     }catch(FileNotFoundException e){e.printStackTrace();}
+		 scan.close();
+     }catch(FileNotFoundException e){
+		e.printStackTrace();
+	}
     
 
     try {
-      handler = new BankHandler();
-      processor = new BankService.Processor(handler);
+      handler = new ReplicatedServerHandler();
+      processor = new ReplicatedBankService.Processor(handler);
+
       handler.setID(id);
+	  handler.setNodeCount(args[1]);
+
+	  BankHandler bh = new BankHandler();
+
       for(int i = 0; i < numberOfAccounts; i++){
-	  handler.createAccount();	 
+		  int accID = bh.createAccount();
+		  String creationStatus = bh.deposit(accID,1000);	 
       }
 
       Runnable simple = new Runnable() {
@@ -70,7 +79,7 @@ public class BankServer {
     }
   }
 
-  public static void someMethod(BankService.Processor processor, int portnumber) {
+  public static void someMethod(ReplicatedBankService.Processor processor, int portnumber) {
     try {
       TTransportFactory factory = new TFramedTransport.Factory();
       TServerTransport serverTransport = new TServerSocket(portnumber);

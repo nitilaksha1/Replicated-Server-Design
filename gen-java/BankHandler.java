@@ -33,7 +33,7 @@ class Account {
 
 }
 
-public class BankHandler implements BankService.Iface {
+public class BankHandler {
 	private HashMap<Integer, Account> map; 
 	private int accountid;
 	private Object lock = new Object();
@@ -63,9 +63,10 @@ public class BankHandler implements BankService.Iface {
 	public int getID(int id){
 		return this.id;
 	}
-        @Override
-        public int createAccount() throws TException {
-        Account acc = new Account(accountid, 0);
+
+	public int createAccount() throws TException {
+
+		Account acc = new Account(accountid, 0);
 		map.put(accountid, acc);
 		writer.println("RequestName: createAccount "+ "Return status: "+accountid);
 		writer.flush(); 
@@ -73,8 +74,8 @@ public class BankHandler implements BankService.Iface {
 		return acc.getUID();
 	}
 
-        @Override
 	public String deposit (int uID, int amount) {
+
 		if (map.containsKey(uID)) {
 
 			Account acc = map.get(uID);
@@ -91,7 +92,6 @@ public class BankHandler implements BankService.Iface {
 		return "FAILED";
 	}
 
-        @Override
 	public int getBalance (int uID) {
 
 		if (map.containsKey(uID)) {
@@ -110,7 +110,6 @@ public class BankHandler implements BankService.Iface {
 		return 0;	
 	}
 
-        @Override
 	public String transfer (int srcuID, int targuID, int amount) {
 	
 		if (map.containsKey(srcuID) && map.containsKey(targuID)) {
