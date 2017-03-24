@@ -14,13 +14,22 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.*;
 
+class Servers{
+	  public int portnumber;
+      public String hostname;
 
+      public Servers(int port, String host){
+      	  portnumber = port;
+		  hostname = host;
+      }
+}
 public class BankClient {
 	  private ArrayList<Integer> accountlist = new ArrayList<Integer>();
 	  public static Random rand = new Random();
           public static Object lock = new Object();
 	  public static BankService.Client client;
 	  public static boolean isUsed = false;
+      public static ArrayList<String> serverlist = new ArrayList<>();
 	  public static List<Thread> th = new ArrayList<Thread>();
 	  ArrayList<Integer> getAccountList () 
 	  {
@@ -57,16 +66,54 @@ public class BankClient {
 
 	  }
 
+      public void listServers(int filename){
+		    
+			Scanner scan = new Scanner (new File(filename));
+			scan.nextLine();
+		
+			while (scan.hasNext()) {
+				String hostname = scan.next();
+				int fid = scan.nextInt();
+				int portnumber = scan.nextInt();
+			    serverlist.add(new Servers(portnumber,hostname));
+				if (id == fid) {
+				serverportnumber = portnumber;
+				break;
+				}
+				
+			}
+		
+			//Rest of server logic
+			scan.close();
+
+		
+	  }
+
+      public Servers getRamdomServer(){
+              
+            return serverlist.get(rand.nextInt(serverlist.size())); 
+	  }
+
 
 	public static void main(String[] args){
 
 
 	  try{
 			final BankClient bc = new BankClient();
-              		final String hostname = args[0];
-			final int portname = Integer.parseInt(args[1]);
+            final String hostname = args[0];
+			final int portname = 9990;
 			int threadCount = Integer.parseInt(args[2]);
-			final int iterationCount = Integer.parseInt(args[3]);
+			final int iterationCount = 100;
+            final String filename = args[1];
+            bc.listServers(filename);
+            
+
+
+			
+   	  for(int i=0; i < 100; i++)
+      {
+
+			String hostname = bc.getRandomServer();
 			TTransport transport;
 			transport = new TSocket(hostname, portname);
   			transport.open();
@@ -75,9 +122,6 @@ public class BankClient {
   			client = new BankService.Client(protocol);
   			final PrintWriter writer = new PrintWriter("clientLog.txt", "UTF-8");
   			
-
-			for (int i = 0; i < 100; i++)
-				bc.newAccountRequest(client,writer);
 
 			for (int i = 0; i < 100; i++) {
 				ArrayList<Integer> list = bc.getAccountList();
@@ -148,7 +192,7 @@ public class BankClient {
 			for(Thread t : th){
 				try{t.join();}catch(InterruptedException e){}
 			}
-
+         }
 			for (int i = 0; i < 100; i++) {
 				ArrayList<Integer> list = bc.getAccountList();
 				int accid = list.get(i);
