@@ -2,7 +2,7 @@
 
 #TODO:<br />
 1. Run multiple servers on same hosts. <br />
-2. Create Configuration file<br />
+2. Create Configuration file -- DONE<br />
 3. Create client to send a dummy request to one of the servers randomly and print some message <br />
 4. Run multiple servers on different hosts. <br />
 5. Create client to send a dummy request to one of the servers randomly and print some message <br />
