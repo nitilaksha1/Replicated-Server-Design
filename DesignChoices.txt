@@ -1,0 +1,23 @@
+Design Choices-
+
+LAMPORT CLOCK MANAGEMENT:
+---------------------------
+
+* Make a class for Lamport Clock management as follows:
+1. Create a class named "LamportClock"<br />
+2. Create a data member "int clockvalue"<br />
+3. Create methods the following methods: 
+	* void UpdateClockForSendRequest (void)
+	* void UpdateClockForReceiveRequest (TimeStamp message)
+	* int  getClockValue()
+
+TOTAL ORDERING MANAGEMENT:
+---------------------------------------------------------------------------------------------------------------------------------------------------
+* Since we are not constructing stream objects we need to somehow find a way to send timestamp of sender process in the request. 
+	* For this we can add a timestamp parameter to all requests in the service file.
+	* Since client is not required to send this timestamp we can assume that a zero value in time stamp indicates that the request is from a client and not from another server.
+* Since the lamport clock value is unique for every event keep a track of the number of acknowledgments received for each request.<br />
+1. Maintain a hashmap with key as the Lamport clock value of the time of request creation and value of count of acknowledgements received<br />
+2. *We will have to create a new methods which define the acknowledgements received for various requests in the server.<br />
+
+
