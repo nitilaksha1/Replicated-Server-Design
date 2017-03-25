@@ -1,0 +1,4 @@
+#Hostname				SERVER-ID			server-port
+localhost	0					5000
+localhost	1					5001
+localhost	2					5002

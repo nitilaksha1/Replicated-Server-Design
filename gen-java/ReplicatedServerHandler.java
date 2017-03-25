@@ -187,19 +187,26 @@ public class ReplicatedServerHandler implements ReplicatedBankService.Iface {
 	@Override
 	public String multi_transfer (int uID, int targuID, int amount, int timestamp, int serverid) {
 
+		System.out.println("Inside multi_transfer of server: "+ serverid);
+		System.out.println("Serverid: " + serverid + "Time stamp param for multi_transfer : " + timestamp);
 		clock.SetClockValueForReceive(timestamp);
 		clock.SetClockValueForSend();
+
 		TransferRequest transreq = new TransferRequest ("TransferRequest", uID, targuID, amount, clock.getClockValue());
 		reqQueue.add((Request)transreq);
-		
+	
+		System.out.println("Serverid : " + serverid + " Clock value in map: " + clock.getClockValue());	
 		map.put (clock.getClockValue(), 0);
 
 		try {
 			//Case: Request has arrived from a client, then we multicast the request
 			if (timestamp == 0) {
 
+				System.out.println("NodeCount = " + nodeCount);
+
 				//TODO:Write code for multicast
-				for (int i = 0; i < nodeCount; i++) {
+				for (int i = 0; i < nodeCount - 1; i++) {
+					System.out.println("Nodes remaining : " + i);
 					String hostname = serverlist.get(i).hostname;
 					int portnumber = serverlist.get(i).portnumber;
 
@@ -210,9 +217,13 @@ public class ReplicatedServerHandler implements ReplicatedBankService.Iface {
 					TProtocol protocol = new  TBinaryProtocol(transport);
 					ReplicatedBankService.Client client = new ReplicatedBankService.Client(protocol);
 
-					client.multi_transfer(uID, targuID, amount, timestamp+2, id);
+					String ss = client.multi_transfer(uID, targuID, amount, timestamp+2, id);
+					System.out.println("serverid: " + serverid + " multi_transfer complete : Result : " + ss);
+					transport.close();
 
 				}
+				System.out.println("Multicast complete");
+
 
 			} else {//Case: Request is from another server, then we will send acknowledgement to that server
 				map.put(timestamp+2, nodeCount - 1);
@@ -229,6 +240,7 @@ public class ReplicatedServerHandler implements ReplicatedBankService.Iface {
 				ReplicatedBankService.Client client = new ReplicatedBankService.Client(protocol);
 
 				client.multi_transfer_ack(timestamp, serverid);
+				transport.close();
 			}
 
 		} catch (TTransportException e) {
@@ -238,15 +250,20 @@ public class ReplicatedServerHandler implements ReplicatedBankService.Iface {
 		}
 
 	
+		System.out.println("Serverid: "+serverid+ " Before polling timestamp+2 = " + (timestamp+2));
 		while (map.get(timestamp+2) != nodeCount - 1); 
+
+		System.out.println("Polling done!");
 
 		//TODO: Check if condition for checking if head node has the same timestamp is required
 		TransferRequest transreq1 = (TransferRequest)reqQueue.remove();
 		int srcuid = transreq1.getSourceAccUID();
 		int targuid = transreq1.gettargetAccUID();
 		int amt = transreq1.getAmount();
-		
+	
+		System.out.println("Serverid: " + serverid + " Calling bankhandler transfer");	
 		String res = bankhandler.transfer(srcuid, targuid, amt);
+		System.out.println("Serverid: " + serverid + "bankhandler's transfer complete");
 		map.remove(timestamp+2);
 
 		return res;
@@ -264,7 +281,8 @@ public class ReplicatedServerHandler implements ReplicatedBankService.Iface {
 
 	@Override
 	public void multi_transfer_ack	(int reqTimeStamp, int serverid) {
-
+		System.out.println("Serverid: " + serverid + "Acknowledgemnet received with time stamp : " + reqTimeStamp);
 		map.put(reqTimeStamp, map.get(reqTimeStamp) + 1);
+		System.out.println("Transfer acknowledgment received!!");
 	}	
 }

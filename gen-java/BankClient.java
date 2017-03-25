@@ -43,15 +43,15 @@ public class BankClient {
 
       void transferRequest(ReplicatedBankService.Client client, PrintWriter writer, int src, int target, int amount) throws TException{
 
-
+		System.out.println("Inside transferRequest");
         String s= client.multi_transfer(src,target,amount,0, -1);
+		System.out.println("Request Processed: Result: " + s);
 
         if (s.equals("FAILED")) {
 
             writer.println("Request: Transfer " + "Parameters: " + src + " "+target + " " + amount + " Request Status: FAILED");
             writer.flush();
         }
-
 
       }
 
@@ -94,7 +94,7 @@ public class BankClient {
 
 
             
-      for(int i=0; i < 100; i++)
+      for(int i=0; i < 1; i++)
       {
 
             Servers serverObject = bc.getRandomServer();
@@ -113,19 +113,22 @@ public class BankClient {
                                 TTransport transport;
                                 transport = new TSocket(host, port);
                                 transport.open();
+								System.out.println("Open.transport sucess!!");
 
                                 TProtocol protocol = new  TBinaryProtocol(transport);
                                 ReplicatedBankService.Client client = new ReplicatedBankService.Client(protocol);
+								System.out.println("ReplicatedBankService Client instance created!!");
 
 
                                   for(int i=0; i < iterationCount; i++){
 
                                     int a = rand.nextInt(10);
-                                    int b = rand.nextInt(10);                                                                
+                                    int b = rand.nextInt(10);
+									System.out.println("Transfeering from account: " + a + " to account: "+b);                                                                
                                     bc.transferRequest (client, writer, a, b, 10);  
                                 }
 
-                        transport.close();
+								transport.close();
 
 
 
@@ -147,7 +150,7 @@ public class BankClient {
             }
          
         }
-            int sum = 0;
+           /* int sum = 0;
 
             for (int i = 0; i < 10; i++) {
                 int accid=i;
@@ -160,20 +163,18 @@ public class BankClient {
             }
 
             System.out.println("Sum of balances = " + sum);
-            writer.println("Sum of balances = " + sum);
+            writer.println("Sum of balances = " + sum);*/
             writer.println();
             writer.flush();          
             writer.close();
     
-      }catch(TException e){
-                e.printStackTrace();
-      }catch(FileNotFoundException e){
+      }//catch(TException e){
+         //       e.printStackTrace();}
+		catch(FileNotFoundException e){
                 e.printStackTrace(); 
       }catch(UnsupportedEncodingException e){ 
                 e.printStackTrace();
       }
       
-      
-
     }
 }

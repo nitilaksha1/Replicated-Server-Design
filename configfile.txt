@@ -1,4 +1,0 @@
-#Hostname				SERVER-ID			server-port
-alpha.cselabs.umn.edu	0					5000
-beta.cselabs.umn.edu	1					5001
-delta.cselabs.umn.edu	2					5002

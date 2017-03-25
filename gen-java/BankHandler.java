@@ -34,7 +34,7 @@ class Account {
 }
 
 public class BankHandler {
-	private HashMap<Integer, Account> map; 
+	private static HashMap<Integer, Account> map; 
 	private int accountid;
 	private Object lock = new Object();
      	private int id=0;

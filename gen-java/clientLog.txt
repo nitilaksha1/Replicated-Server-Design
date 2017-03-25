@@ -1,4 +1,1 @@
-Sum of balances = 10000
-
-Sum of balances = 10000
 

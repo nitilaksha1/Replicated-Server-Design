@@ -37,6 +37,7 @@ public class BankServer {
 		 scan.nextLine();
 			
 		 while (scan.hasNext()) {
+			String hostname = scan.next();
 			int fid = scan.nextInt();
 			int portnumber = scan.nextInt();
 					
