@@ -1,0 +1,5 @@
+1. thrift -r --gen java BankService.thrift
+2. cd gen-java
+3. javac -cp ".:libs/libthrift-0.9.1.jar:libs/slf4j-api-1.7.12.jar" *.java
+4. java -cp ".:libs/libthrift-0.9.1.jar:libs/slf4j-api-1.7.12.jar" BankServer <filename> <id>
+5. java -cp ".:libs/libthrift-0.9.1.jar:libs/slf4j-api-1.7.12.jar" BankClient <localhost> <port> <no of threads> <number of iterations>
