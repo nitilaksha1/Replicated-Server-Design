@@ -26,8 +26,8 @@ class Servers{
 public class BankClient {
 	  private ArrayList<Integer> accountlist = new ArrayList<Integer>();
 	  public static Random rand = new Random();
-          public static Object lock = new Object();
-	  public static BankService.Client client;
+      public static Object lock = new Object();
+	  public static ReplicatedBankService.Client client;
 	  public static boolean isUsed = false;
       public static ArrayList<String> serverlist = new ArrayList<>();
 	  public static List<Thread> th = new ArrayList<Thread>();
@@ -36,23 +36,12 @@ public class BankClient {
 		return accountlist;
 	  }
 
-	  void newAccountRequest(BankService.Client client, PrintWriter writer) throws TException{
-
-	  	int val = client.createAccount();
-                accountlist.add(val);
-	  }
-
-	  void depositRequest(BankService.Client client, PrintWriter writer, int id, int amount) throws TException{
-
-	  	client.deposit(id,amount);
-	  }
-
-	  int balanceRequest(BankService.Client client, PrintWriter writer, int id) throws TException{
+	  int balanceRequest(ReplicatedBankService.Client client, PrintWriter writer, int id) throws TException{
 
 	  	return client.getBalance(id);
 	  }
 
-	  void transferRequest(BankService.Client client, PrintWriter writer, int src, int target, int amount) throws TException{
+	  void transferRequest(ReplicatedBankService.Client client, PrintWriter writer, int src, int target, int amount) throws TException{
 
 
 	  	String s= client.transfer(src,target,amount);
@@ -101,7 +90,6 @@ public class BankClient {
 	  try{
 			final BankClient bc = new BankClient();
             final String hostname = args[0];
-			final int portname = 9990;
 			int threadCount = Integer.parseInt(args[2]);
 			final int iterationCount = 100;
             final String filename = args[1];
@@ -113,39 +101,19 @@ public class BankClient {
    	  for(int i=0; i < 100; i++)
       {
 
-			String hostname = bc.getRandomServer();
+			Servers serverObject = bc.getRandomServer();
+			String host = serverObject.host;
+			int port = serverObject.portnumber
 			TTransport transport;
-			transport = new TSocket(hostname, portname);
+			transport = new TSocket(host, port);
   			transport.open();
 
   			TProtocol protocol = new  TBinaryProtocol(transport);
-  			client = new BankService.Client(protocol);
+  			client = new ReplicatedBankService.Client(protocol);
   			final PrintWriter writer = new PrintWriter("clientLog.txt", "UTF-8");
   			
 
-			for (int i = 0; i < 100; i++) {
-				ArrayList<Integer> list = bc.getAccountList();
-				int accid = list.get(i);
-				bc.depositRequest(client, writer, accid, 100);
-			}
 
-			int sum = 0;
-
-			for (int i = 0; i < 100; i++) {
-				ArrayList<Integer> list = bc.getAccountList();
-				int accid = list.get(i);
-				int bal = bc.balanceRequest(client, writer, accid);
-
-				if (bal == -1)
-					bal = 0;
-
-				sum += bal;
-			}
-
-			System.out.println("Sum of balances = " + sum);
-			writer.println("Sum of balances = " + sum);
-			writer.println();	
-			writer.flush();		
 			//ExecutorService threads = Executors.newFixedThreadPool(threadCount);
 			
 			for (int i = 0; i < threadCount; i++) {
@@ -156,19 +124,18 @@ public class BankClient {
 				
 						try {           
 						  		TTransport transport;
-								transport = new TSocket(hostname, portname);
+								transport = new TSocket(host, port);
 					  			transport.open();
 
 					  			TProtocol protocol = new  TBinaryProtocol(transport);
-					  			BankService.Client client = new BankService.Client(protocol);
+					  			ReplicatedBankService.Client client = new ReplicatedBankService.Client(protocol);
 
 
 							      for(int i=0; i < iterationCount; i++){
 
-									int a = rand.nextInt(bc.getAccountList().size());
-                                             				int b = rand.nextInt(bc.getAccountList().size());                                                                	
-									ArrayList<Integer> arr = bc.getAccountList();
-									bc.transferRequest (client, writer, arr.get(a), arr.get(b), 10);	
+									int a = rand.nextInt(10);
+                                    int b = rand.nextInt(10);                                                                
+									bc.transferRequest (client, writer, a, b, 10);	
 								}
 
 						transport.close();
@@ -193,9 +160,8 @@ public class BankClient {
 				try{t.join();}catch(InterruptedException e){}
 			}
          }
-			for (int i = 0; i < 100; i++) {
-				ArrayList<Integer> list = bc.getAccountList();
-				int accid = list.get(i);
+			for (int i = 0; i < 10; i++) {
+				int accid i;
 				int bal = bc.balanceRequest(client, writer, accid);
 
 				if (bal == -1)
