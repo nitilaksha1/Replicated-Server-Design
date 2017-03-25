@@ -15,175 +15,165 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.*;
 
 class Servers{
-	  public int portnumber;
+      public int portnumber;
       public String hostname;
 
       public Servers(int port, String host){
-      	  portnumber = port;
-		  hostname = host;
+          portnumber = port;
+          hostname = host;
       }
 }
 public class BankClient {
-	  private ArrayList<Integer> accountlist = new ArrayList<Integer>();
-	  public static Random rand = new Random();
+      private ArrayList<Integer> accountlist = new ArrayList<Integer>();
+      public static Random rand = new Random();
       public static Object lock = new Object();
-	  public static ReplicatedBankService.Client client;
-	  public static boolean isUsed = false;
-      public static ArrayList<String> serverlist = new ArrayList<>();
-	  public static List<Thread> th = new ArrayList<Thread>();
-	  ArrayList<Integer> getAccountList () 
-	  {
-		return accountlist;
-	  }
+      public static ReplicatedBankService.Client client;
+      public static boolean isUsed = false;
+      public static ArrayList<Servers> serverlist = new ArrayList<>();
+      public static List<Thread> th = new ArrayList<Thread>();
+      ArrayList<Integer> getAccountList () 
+      {
+        return accountlist;
+      }
 
-	  int balanceRequest(ReplicatedBankService.Client client, PrintWriter writer, int id) throws TException{
+      int balanceRequest(ReplicatedBankService.Client client, PrintWriter writer, int id) throws TException{
 
-	  	return client.getBalance(id);
-	  }
+        return client.multi_getBalance(id,0);
+      }
 
-	  void transferRequest(ReplicatedBankService.Client client, PrintWriter writer, int src, int target, int amount) throws TException{
-
-
-	  	String s= client.transfer(src,target,amount);
-
-		if (s.equals("FAILED")) {
-
-			writer.println("Request: Transfer " + "Parameters: " + src + " "+target + " " + amount + " Request Status: FAILED");
-			writer.flush();
-		}
+      void transferRequest(ReplicatedBankService.Client client, PrintWriter writer, int src, int target, int amount) throws TException{
 
 
-	  }
+        String s= client.multi_transfer(src,target,amount,0);
 
-      public void listServers(int filename){
-		    
-			Scanner scan = new Scanner (new File(filename));
-			scan.nextLine();
-		
-			while (scan.hasNext()) {
-				String hostname = scan.next();
-				int fid = scan.nextInt();
-				int portnumber = scan.nextInt();
-			    serverlist.add(new Servers(portnumber,hostname));
-				if (id == fid) {
-				serverportnumber = portnumber;
-				break;
-				}
-				
-			}
-		
-			//Rest of server logic
-			scan.close();
+        if (s.equals("FAILED")) {
 
-		
-	  }
+            writer.println("Request: Transfer " + "Parameters: " + src + " "+target + " " + amount + " Request Status: FAILED");
+            writer.flush();
+        }
 
-      public Servers getRamdomServer(){
+
+      }
+
+      public void listServers(String filename){
+          try{     
+            Scanner scan = new Scanner (new File(filename));
+            scan.nextLine();
+        
+            while (scan.hasNext()) {
+                String hostname = scan.next();
+                int fid = scan.nextInt();
+                int portnumber = scan.nextInt();
+                serverlist.add(new Servers(portnumber,hostname));
+
+                
+            }
+            scan.close();
+            }catch(FileNotFoundException e){}
+            //Rest of server logic
+        
+      }
+
+      public Servers getRandomServer(){
               
             return serverlist.get(rand.nextInt(serverlist.size())); 
-	  }
+      }
 
 
-	public static void main(String[] args){
+    public static void main(String[] args){
 
 
-	  try{
-			final BankClient bc = new BankClient();
+      try{
+            final BankClient bc = new BankClient();
             final String hostname = args[0];
-			int threadCount = Integer.parseInt(args[2]);
-			final int iterationCount = 100;
+            int threadCount = Integer.parseInt(args[2]);
+            final int iterationCount = 100;
             final String filename = args[1];
             bc.listServers(filename);
+            final PrintWriter writer = new PrintWriter("clientLog.txt", "UTF-8");
+
+
             
-
-
-			
-   	  for(int i=0; i < 100; i++)
+      for(int i=0; i < 100; i++)
       {
 
-			Servers serverObject = bc.getRandomServer();
-			String host = serverObject.host;
-			int port = serverObject.portnumber
-			TTransport transport;
-			transport = new TSocket(host, port);
-  			transport.open();
+            Servers serverObject = bc.getRandomServer();
+            final String host = serverObject.hostname;
+            final int port = serverObject.portnumber;
+   
+           //ExecutorService threads = Executors.newFixedThreadPool(threadCount);
+            
+            for (int j = 0; j < threadCount; j++) {
 
-  			TProtocol protocol = new  TBinaryProtocol(transport);
-  			client = new ReplicatedBankService.Client(protocol);
-  			final PrintWriter writer = new PrintWriter("clientLog.txt", "UTF-8");
-  			
+                  Thread t = new Thread( new Runnable() 
+                {               
+                        public void run () {
+                
+                        try {           
+                                TTransport transport;
+                                transport = new TSocket(host, port);
+                                transport.open();
 
-
-			//ExecutorService threads = Executors.newFixedThreadPool(threadCount);
-			
-			for (int i = 0; i < threadCount; i++) {
-
-			      Thread t = new Thread( new Runnable() 
-				{				
-						public void run () {
-				
-						try {           
-						  		TTransport transport;
-								transport = new TSocket(host, port);
-					  			transport.open();
-
-					  			TProtocol protocol = new  TBinaryProtocol(transport);
-					  			ReplicatedBankService.Client client = new ReplicatedBankService.Client(protocol);
+                                TProtocol protocol = new  TBinaryProtocol(transport);
+                                ReplicatedBankService.Client client = new ReplicatedBankService.Client(protocol);
 
 
-							      for(int i=0; i < iterationCount; i++){
+                                  for(int i=0; i < iterationCount; i++){
 
-									int a = rand.nextInt(10);
+                                    int a = rand.nextInt(10);
                                     int b = rand.nextInt(10);                                                                
-									bc.transferRequest (client, writer, a, b, 10);	
-								}
+                                    bc.transferRequest (client, writer, a, b, 10);  
+                                }
 
-						transport.close();
+                        transport.close();
 
 
 
-						} catch (TTransportException e) {
+                        } catch (TTransportException e) {
 
-							e.printStackTrace();
-						}catch (TException e){ e.printStackTrace();}
-					      
-					}
-				});
-				t.start();
-				th.add(t);
-			
-			}
+                            e.printStackTrace();
+                        }catch (TException e){ e.printStackTrace();}
+                          
+                    }
+                });
+                t.start();
+                th.add(t);
+            
+            }
 
-			sum = 0;
+        
+            for(Thread t : th){
+                try{t.join();}catch(InterruptedException e){}
+            }
+         
+        }
+            int sum = 0;
 
-			for(Thread t : th){
-				try{t.join();}catch(InterruptedException e){}
-			}
-         }
-			for (int i = 0; i < 10; i++) {
-				int accid i;
-				int bal = bc.balanceRequest(client, writer, accid);
+            for (int i = 0; i < 10; i++) {
+                int accid=i;
+                int bal = bc.balanceRequest(client, writer, accid);
 
-				if (bal == -1)
-					bal = 0;
+                if (bal == -1)
+                    bal = 0;
 
-				sum += bal;
-			}
+                sum += bal;
+            }
 
-			System.out.println("Sum of balances = " + sum);
-			writer.println("Sum of balances = " + sum);
-			writer.println();
-			writer.flush();
-			transport.close();			
-			writer.close();
-	
-	  }catch(TException e){
-	  	e.printStackTrace();
-	  }catch(FileNotFoundException e){
+            System.out.println("Sum of balances = " + sum);
+            writer.println("Sum of balances = " + sum);
+            writer.println();
+            writer.flush();          
+            writer.close();
+    
+      }catch(TException e){
+                e.printStackTrace();
+      }catch(FileNotFoundException e){
                 e.printStackTrace(); 
-          }catch(UnsupportedEncodingException e){ e.printStackTrace();}
-	  
+      }catch(UnsupportedEncodingException e){ 
+                e.printStackTrace();
+      }
+      
       
 
-	}
+    }
 }
