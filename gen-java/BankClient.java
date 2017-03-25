@@ -38,13 +38,13 @@ public class BankClient {
 
       int balanceRequest(ReplicatedBankService.Client client, PrintWriter writer, int id) throws TException{
 
-        return client.multi_getBalance(id,0);
+        return client.multi_getBalance(id,0, -1);
       }
 
       void transferRequest(ReplicatedBankService.Client client, PrintWriter writer, int src, int target, int amount) throws TException{
 
 
-        String s= client.multi_transfer(src,target,amount,0);
+        String s= client.multi_transfer(src,target,amount,0, -1);
 
         if (s.equals("FAILED")) {
 

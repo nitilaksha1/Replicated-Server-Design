@@ -1,4 +1,13 @@
 import org.apache.thrift.TException;
+import org.apache.thrift.transport.TTransportException;
+import org.apache.thrift.transport.TSSLTransportFactory;
+import org.apache.thrift.transport.TTransport;
+import org.apache.thrift.transport.TSocket;
+import org.apache.thrift.*;
+import org.apache.thrift.transport.TSSLTransportFactory.TSSLTransportParameters;
+import org.apache.thrift.protocol.TBinaryProtocol;
+import org.apache.thrift.protocol.TProtocol;
+import org.apache.thrift.TException;
 import java.util.*;
 import java.io.*;
 import clock.*;
@@ -85,11 +94,23 @@ class TransferRequest extends Request {
 	}
 }
 
+class ServerInfo{
+      public int portnumber;
+      public String hostname;
+
+      public ServerInfo(int port, String host){
+          portnumber = port;
+          hostname = host;
+      }
+}
+
 public class ReplicatedServerHandler implements ReplicatedBankService.Iface {
 	
 	private LamportClock clock;
 	private volatile Queue<Request> reqQueue;
 	private HashMap<Integer, Integer> map;
+	private HashMap<Integer, ServerInfo> servermap;
+	private ArrayList<ServerInfo> serverlist;
 	private int id;
 	private int nodeCount;
 	private BankHandler bankhandler;
@@ -99,19 +120,26 @@ public class ReplicatedServerHandler implements ReplicatedBankService.Iface {
 		map = new HashMap<>();
 		reqQueue = new LinkedList<>();
 		bankhandler = new BankHandler();
+		serverlist = new ArrayList<>();
+		servermap = new HashMap<>();
 		nodeCount = 0;
 	}
 
-	public void setNodeCount (String filename) throws FileNotFoundException{
+	public void setNodeCountAndList (String filename) throws FileNotFoundException{
 
 		Scanner scan = new Scanner (new File(filename));
 		scan.nextLine();
 		
 		while (scan.hasNext()) {
-			scan.next();
-			scan.nextInt();
-			scan.nextInt();
+			String hostname = scan.next();
+			int id = scan.nextInt();
+			int portnumber = scan.nextInt();
 			
+			servermap.put(id, new ServerInfo(portnumber, hostname));
+
+			if (id != this.id)
+				serverlist.add(new ServerInfo(portnumber, hostname));
+
 			nodeCount += 1;
 				
 		}
@@ -129,12 +157,12 @@ public class ReplicatedServerHandler implements ReplicatedBankService.Iface {
     }
 		
 	@Override
-	public String multi_deposit (int uID, int amount, int timestamp) { 
+	public String multi_deposit (int uID, int amount, int timestamp, int serverid) { 
 		return "";
 	}
 
 	@Override
-	public int multi_getBalance 	(int uID, int timestamp) {
+	public int multi_getBalance 	(int uID, int timestamp, int serverid) {
 
 		clock.SetClockValueForReceive(timestamp);
 		clock.SetClockValueForSend();
@@ -142,8 +170,6 @@ public class ReplicatedServerHandler implements ReplicatedBankService.Iface {
 		reqQueue.add((Request)balreq);
 		
 		map.put (clock.getClockValue(), 0);
-
-		//TODO:Write code for multicast
 
 		while (map.get(timestamp+2) != nodeCount - 1); 
 
@@ -159,7 +185,7 @@ public class ReplicatedServerHandler implements ReplicatedBankService.Iface {
 	}
 
 	@Override
-	public String multi_transfer (int uID, int targuID, int amount, int timestamp) {
+	public String multi_transfer (int uID, int targuID, int amount, int timestamp, int serverid) {
 
 		clock.SetClockValueForReceive(timestamp);
 		clock.SetClockValueForSend();
@@ -168,8 +194,50 @@ public class ReplicatedServerHandler implements ReplicatedBankService.Iface {
 		
 		map.put (clock.getClockValue(), 0);
 
-		//TODO:Write code for multicast
+		try {
+			//Case: Request has arrived from a client, then we multicast the request
+			if (timestamp == 0) {
 
+				//TODO:Write code for multicast
+				for (int i = 0; i < nodeCount; i++) {
+					String hostname = serverlist.get(i).hostname;
+					int portnumber = serverlist.get(i).portnumber;
+
+					TTransport transport;
+					transport = new TSocket(hostname, portnumber);
+					transport.open();
+
+					TProtocol protocol = new  TBinaryProtocol(transport);
+					ReplicatedBankService.Client client = new ReplicatedBankService.Client(protocol);
+
+					client.multi_transfer(uID, targuID, amount, timestamp+2, id);
+
+				}
+
+			} else {//Case: Request is from another server, then we will send acknowledgement to that server
+				map.put(timestamp+2, nodeCount - 1);
+			
+				ServerInfo info = servermap.get(serverid);	
+				String hostname = info.hostname;
+				int portnumber = info.portnumber;
+				
+				TTransport transport;
+				transport = new TSocket(hostname, portnumber);
+				transport.open();
+
+				TProtocol protocol = new  TBinaryProtocol(transport);
+				ReplicatedBankService.Client client = new ReplicatedBankService.Client(protocol);
+
+				client.multi_transfer_ack(timestamp, serverid);
+			}
+
+		} catch (TTransportException e) {
+			e.printStackTrace();
+		} catch (TException e) {
+			e.printStackTrace();
+		}
+
+	
 		while (map.get(timestamp+2) != nodeCount - 1); 
 
 		//TODO: Check if condition for checking if head node has the same timestamp is required
@@ -185,18 +253,17 @@ public class ReplicatedServerHandler implements ReplicatedBankService.Iface {
 	}
 
 	@Override
-	public void multi_deposit_ack(int reqtimeStamp) {
+	public void multi_deposit_ack(int reqtimeStamp, int serverid) {
 
 	}
 
 	@Override
-	public void multi_getBalance_ack (int reqTimeStamp) {
+	public void multi_getBalance_ack (int reqTimeStamp, int serverid) {
 
-		map.put(reqTimeStamp, map.get(reqTimeStamp) + 1);
 	}
 
 	@Override
-	public void multi_transfer_ack	(int reqTimeStamp) {
+	public void multi_transfer_ack	(int reqTimeStamp, int serverid) {
 
 		map.put(reqTimeStamp, map.get(reqTimeStamp) + 1);
 	}	

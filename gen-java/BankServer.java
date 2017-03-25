@@ -58,7 +58,7 @@ public class BankServer {
       processor = new ReplicatedBankService.Processor(handler);
 
       handler.setID(id);
-	  handler.setNodeCount(args[1]);
+	  handler.setNodeCountAndList(args[1]);
 
 	  BankHandler bh = new BankHandler();
 
