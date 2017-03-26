@@ -6,7 +6,7 @@ service ReplicatedBankService {
    void 	multi_deposit_ack		(1:i32 reqTimeStamp, 2:i32 serverid),
    void 	multi_getBalance_ack 	(1:i32 reqTimeStamp, 2:i32 serverid),
    void 	multi_transfer_ack 		(1:string requestID, 2:i32 serverid),
-oneway void multi_transfer_server(1:i32 srcuID, 2:i32 targuID, 3:i32 amount, 4:i32 timestamp, 5:i32 serverid, 6:string requestID)
+   void multi_transfer_server(1:i32 srcuID, 2:i32 targuID, 3:i32 amount, 4:i32 timestamp, 5:i32 serverid, 6:string requestID)
 
 
    
