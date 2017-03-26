@@ -7,6 +7,7 @@ import org.apache.thrift.*;
 import org.apache.thrift.transport.TSSLTransportFactory.TSSLTransportParameters;
 import org.apache.thrift.protocol.TBinaryProtocol;
 import org.apache.thrift.protocol.TProtocol;
+import org.apache.thrift.transport.TFramedTransport;
 import org.apache.thrift.TException;
 import java.util.*;
 import java.io.*;
@@ -15,15 +16,23 @@ import clock.*;
 class Request {
 	private int 	timestamp;
 	private String 	reqName;
+	private int ackCount;
+	private String reqID;
 
-	public Request (String name, int timestamp) {
+	public Request (String name, int timestamp, int ackCount, String reqID) {
 		reqName = name;
 		this.timestamp = timestamp;
+		this.ackCount = ackCount;
+		this.reqID = reqID;
 	}
 
 	public String getReqName () {
 		return reqName;
 	}
+	public int getAckCount() { return ackCount; }
+	public void setAckCount() {ackCount++;}
+	public int getTimestamp() { return timestamp; }
+	public String getReqID() { return reqID; }
 	
 }
 
@@ -70,8 +79,8 @@ class TransferRequest extends Request {
 	private int targetAccUID;
 	private int amount;
 
-	public TransferRequest (String name, int srcAccUID, int targAccUID, int amt, int timestamp) {
-		super(name, timestamp);
+	public TransferRequest (String name, int srcAccUID, int targAccUID, int amt, int timestamp, int count, String requestID) {
+		super(name, timestamp, count, requestID);
 		sourceAccUID = srcAccUID;
 		targetAccUID = targAccUID;
 
@@ -114,6 +123,7 @@ public class ReplicatedServerHandler implements ReplicatedBankService.Iface {
 	private int id;
 	private int nodeCount;
 	private BankHandler bankhandler;
+	private volatile int reqID;
 
 	public ReplicatedServerHandler () {
 		clock = new LamportClock();
@@ -123,6 +133,8 @@ public class ReplicatedServerHandler implements ReplicatedBankService.Iface {
 		serverlist = new ArrayList<>();
 		servermap = new HashMap<>();
 		nodeCount = 0;
+		reqID = 0;
+
 	}
 
 	public void setNodeCountAndList (String filename) throws FileNotFoundException{
@@ -184,27 +196,50 @@ public class ReplicatedServerHandler implements ReplicatedBankService.Iface {
 
 	}
 
+	//serverID is used for getting the value of sender server
+	@Override
+	public void multi_transfer_server (int uID, int targuID, int amount, int timestamp, int serverid, int requestID) {
+
+
+			synchronized (reqQueue){
+				clock.SetClockValueForReceive(timestamp);
+				transreq = new TransferRequest("TransferRequest", uID, targuID, amount, clock.getClockValue(), nodeCount -1, requestID);
+				reqQueue.add((Request) transreq);
+			}
+
+			ServerInfo info = servermap.get(serverid);
+			String hostname = info.hostname;
+			int portnumber = info.portnumber;
+
+			TTransport transport;
+			transport = new TSocket(hostname, portnumber);
+			transport.open();
+
+			TProtocol protocol = new  TBinaryProtocol(new TFramedTransport(transport));
+			ReplicatedBankService.Client client = new ReplicatedBankService.Client(protocol);
+			client.multi_transfer_ack(requestID, id);
+
+	}
+
+
 	@Override
 	public String multi_transfer (int uID, int targuID, int amount, int timestamp, int serverid) {
+		System.out.println("Inside multi_transfer of server: " + serverid);
+		String currentRequest;
+		TransferRequest transreq;
+		String res = "Failed";
 
-		System.out.println("Inside multi_transfer of server: "+ serverid);
-		System.out.println("Serverid: " + serverid + "Time stamp param for multi_transfer : " + timestamp);
-		clock.SetClockValueForReceive(timestamp);
-		clock.SetClockValueForSend();
+		synchronized (reqID){
+			reqID += 1;
+		}
 
-		TransferRequest transreq = new TransferRequest ("TransferRequest", uID, targuID, amount, clock.getClockValue());
-		reqQueue.add((Request)transreq);
-	
-		System.out.println("Serverid : " + serverid + " Clock value in map: " + clock.getClockValue());	
-		map.put (clock.getClockValue(), 0);
-
-		try {
-			//Case: Request has arrived from a client, then we multicast the request
-			if (timestamp == 0) {
-
-				System.out.println("NodeCount = " + nodeCount);
-
-				//TODO:Write code for multicast
+		synchronized (reqQueue) {
+			clock.SetClockValueForReceive(timestamp);
+			currentRequest = getID() + "_" + reqID
+			transreq = new TransferRequest("TransferRequest", uID, targuID, amount, clock.getClockValue(), 0, currentRequest);
+			reqQueue.add((Request) transreq);
+		}
+		try{
 				for (int i = 0; i < nodeCount - 1; i++) {
 					System.out.println("Nodes remaining : " + i);
 					String hostname = serverlist.get(i).hostname;
@@ -214,60 +249,42 @@ public class ReplicatedServerHandler implements ReplicatedBankService.Iface {
 					transport = new TSocket(hostname, portnumber);
 					transport.open();
 
-					TProtocol protocol = new  TBinaryProtocol(transport);
+					TProtocol protocol = new  TBinaryProtocol(new TFramedTransport(transport));
 					ReplicatedBankService.Client client = new ReplicatedBankService.Client(protocol);
-
-					String ss = client.multi_transfer(uID, targuID, amount, timestamp+2, id);
+					clock.SetClockValueForSend();
+					client.multi_transfer_server(uID, targuID, amount, clock.getClockValue() , id, currentRequest);
 					System.out.println("serverid: " + serverid + " multi_transfer complete : Result : " + ss);
 					transport.close();
 
-				}
-				System.out.println("Multicast complete");
-
-
-			} else {//Case: Request is from another server, then we will send acknowledgement to that server
-				map.put(timestamp+2, nodeCount - 1);
-			
-				ServerInfo info = servermap.get(serverid);	
-				String hostname = info.hostname;
-				int portnumber = info.portnumber;
-				
-				TTransport transport;
-				transport = new TSocket(hostname, portnumber);
-				transport.open();
-
-				TProtocol protocol = new  TBinaryProtocol(transport);
-				ReplicatedBankService.Client client = new ReplicatedBankService.Client(protocol);
-
-				client.multi_transfer_ack(timestamp, serverid);
-				transport.close();
-			}
-
+					}
 		} catch (TTransportException e) {
-			e.printStackTrace();
-		} catch (TException e) {
-			e.printStackTrace();
+					e.printStackTrace();
+				} catch (TException e) {
+					e.printStackTrace();
 		}
 
-	
-		System.out.println("Serverid: "+serverid+ " Before polling timestamp+2 = " + (timestamp+2));
-		while (map.get(timestamp+2) != nodeCount - 1); 
+		while(true){
+			synchronized (reqQueue){
+				TransferRequest temp = (TransferRequest)reqQueue.peek();
+				while(!temp.getReqID().equals(currentRequest) &&  temp.getAckCount() != nodeCount -1)
+					reqQueue.wait();
 
-		System.out.println("Polling done!");
+				TransferRequest headReq = reqQueue.remove();
+				int src = headReq.getSourceAccUID();
+				int target = headReq.gettargetAccUID();
+				int amt = headReq.getAmount();
 
-		//TODO: Check if condition for checking if head node has the same timestamp is required
-		TransferRequest transreq1 = (TransferRequest)reqQueue.remove();
-		int srcuid = transreq1.getSourceAccUID();
-		int targuid = transreq1.gettargetAccUID();
-		int amt = transreq1.getAmount();
-	
-		System.out.println("Serverid: " + serverid + " Calling bankhandler transfer");	
-		String res = bankhandler.transfer(srcuid, targuid, amt);
-		System.out.println("Serverid: " + serverid + "bankhandler's transfer complete");
-		map.remove(timestamp+2);
+				res = bankhandler.transfer(src,target,amt);
+				reqQueue.notifyAll();
+				break;
+			}
+		}
 
 		return res;
+
+
 	}
+
 
 	@Override
 	public void multi_deposit_ack(int reqtimeStamp, int serverid) {
@@ -280,9 +297,17 @@ public class ReplicatedServerHandler implements ReplicatedBankService.Iface {
 	}
 
 	@Override
-	public void multi_transfer_ack	(int reqTimeStamp, int serverid) {
-		System.out.println("Serverid: " + serverid + "Acknowledgemnet received with time stamp : " + reqTimeStamp);
-		map.put(reqTimeStamp, map.get(reqTimeStamp) + 1);
-		System.out.println("Transfer acknowledgment received!!");
-	}	
+	public void multi_transfer_ack	(String requestID, int serverid) {
+		for (int i  = 0; i < reqQueue.size(); i++) {
+			TransferRequest req = (TransferRequest)reqQueue.get(i);
+			if (req.getReqID() == requestID) {
+				req.setAckCount();
+
+				if (req.getAckCount() == nodeCount - 1)
+					reqQueue.notifyAll();
+
+				break;
+			}
+		}
+	}
 }
