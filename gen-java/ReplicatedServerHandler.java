@@ -237,6 +237,19 @@ public class ReplicatedServerHandler implements ReplicatedBankService.Iface {
 		System.out.println("Total number of Client Requests = " + reqcount);
 		System.out.println("Total Response Time = " + totalresponsetime);
 		System.out.println("Average response time = " + (totalresponsetime/reqcount));
+		System.out.println("The pending requests in the Queue: ");
+
+		Object[] requestArray;
+
+		synchronized (reqQueue) {
+
+			requestArray = reqQueue.toArray();
+
+			for (int i = 0; i < reqQueue.size(); i++) {
+				TransferRequest req = (TransferRequest) requestArray[i];
+				System.out.println("Request Id: " + req.getReqID());
+			}
+		}
 
 	}
 
@@ -276,6 +289,19 @@ public class ReplicatedServerHandler implements ReplicatedBankService.Iface {
 		System.out.println("Total number of Client Requests = " + reqcount);
 		System.out.println("Total Response Time = " + totalresponsetime);
 		System.out.println("Average response time = " + (totalresponsetime/reqcount));
+		System.out.println("The pending requests in the Queue: ");
+
+		Object[] requestArray;
+
+		synchronized (reqQueue) {
+
+			requestArray = reqQueue.toArray();
+
+			for (int i = 0; i < reqQueue.size(); i++) {
+				TransferRequest req = (TransferRequest) requestArray[i];
+				System.out.println("Request Id: " + req.getReqID());
+			}
+		}
 
 	}
 

@@ -85,13 +85,10 @@ public class BankClient {
             final BankClient bc = new BankClient();
             final String hostname = args[0];
             int threadCount = Integer.parseInt(args[2]);
-            final int iterationCount = 1;
+            final int iterationCount = 10;
             final String filename = args[1];
             bc.listServers(filename);
             final PrintWriter writer = new PrintWriter("clientLog.txt", "UTF-8");
-
-
-            
 
 
            //ExecutorService threads = Executors.newFixedThreadPool(threadCount);
