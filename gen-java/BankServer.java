@@ -60,6 +60,7 @@ public class BankServer {
 
       handler.setID(id);
 	  handler.setNodeCountAndList(args[1]);
+      handler.initLogFile("serverLog");
 
 	  BankHandler bh = new BankHandler();
 
@@ -70,7 +71,7 @@ public class BankServer {
 
       Runnable simple = new Runnable() {
         public void run() {
-          someMethod(processor,BankServer.serverportnumber);
+          someMethod(processor,BankServer.serverportnumber, handler);
         }
       };      
      
@@ -80,13 +81,15 @@ public class BankServer {
     }
   }
 
-  public static void someMethod(ReplicatedBankService.Processor processor, int portnumber) {
+  public static void someMethod(ReplicatedBankService.Processor processor, int portnumber, ReplicatedServerHandler handler) {
     try {
       TTransportFactory factory = new TFramedTransport.Factory();
       TServerTransport serverTransport = new TServerSocket(portnumber);
       TServer server = new TThreadPoolServer(new Args(serverTransport).processor(processor));
       System.out.println("Starting the simple server...");
       server.serve();
+      handler.closeLogFile();
+
        /*  TServerTransport serverTransport = new TServerSocket(9090);
          TThreadPoolServer.Args arguments = new TThreadPoolServer.Args(serverTransport);
          arguments.processor(processor);

@@ -17,12 +17,15 @@ import java.util.concurrent.*;
 class Servers{
       public int portnumber;
       public String hostname;
+      public int serverid;
 
-      public Servers(int port, String host){
+      public Servers(int port, String host, int serverid){
           portnumber = port;
           hostname = host;
+          this.serverid = serverid;
       }
 }
+
 public class BankClient {
       private ArrayList<Integer> accountlist = new ArrayList<Integer>();
       public static Random rand = new Random();
@@ -41,18 +44,13 @@ public class BankClient {
         return client.multi_getBalance(id,0, -1);
       }
 
-      void transferRequest(ReplicatedBankService.Client client, PrintWriter writer, int src, int target, int amount) throws TException{
+      void transferRequest(ReplicatedBankService.Client client, PrintWriter writer, int src, int target, int amount, int srvid) throws TException{
 
 		System.out.println("Inside transferRequest");
         String s= client.multi_transfer(src,target,amount,0, -1);
 		System.out.println("Request Processed: Result: " + s);
-
-        if (s.equals("FAILED")) {
-
-            writer.println("Request: Transfer " + "Parameters: " + src + " "+target + " " + amount + " Request Status: FAILED");
-            writer.flush();
-        }
-
+        writer.println("CLNT-ID   " + srvid + "   RSP   " + System.currentTimeMillis() + "  " + s);
+        writer.flush();
       }
 
       public void listServers(String filename){
@@ -64,7 +62,7 @@ public class BankClient {
                 String hostname = scan.next();
                 int fid = scan.nextInt();
                 int portnumber = scan.nextInt();
-                serverlist.add(new Servers(portnumber,hostname));
+                serverlist.add(new Servers(portnumber,hostname, fid));
 
                 
             }
@@ -100,6 +98,7 @@ public class BankClient {
             Servers serverObject = bc.getRandomServer();
             final String host = serverObject.hostname;
             final int port = serverObject.portnumber;
+            final int srvid = serverObject.serverid;
    
            //ExecutorService threads = Executors.newFixedThreadPool(threadCount);
             
@@ -124,8 +123,10 @@ public class BankClient {
 
                                     int a = rand.nextInt(10);
                                     int b = rand.nextInt(10);
-									System.out.println("Transfeering from account: " + a + " to account: "+b);                                                                
-                                    bc.transferRequest (client, writer, a, b, 10);  
+									System.out.println("Transfeering from account: " + a + " to account: "+b);
+                                    writer.println("CLNT-ID   " + srvid + "   REQ   " + System.currentTimeMillis() + "	Transfer Operation" + "	Source ID: " + a + "	Target ID: " + b + "	Amount : 10");
+                                    writer.flush();
+                                    bc.transferRequest (client, writer, a, b, 10, srvid);
                                 }
 
 								transport.close();
@@ -150,23 +151,8 @@ public class BankClient {
             }
          
         }
-           /* int sum = 0;
 
-            for (int i = 0; i < 10; i++) {
-                int accid=i;
-                int bal = bc.balanceRequest(client, writer, accid);
-
-                if (bal == -1)
-                    bal = 0;
-
-                sum += bal;
-            }
-
-            System.out.println("Sum of balances = " + sum);
-            writer.println("Sum of balances = " + sum);*/
-            writer.println();
-            writer.flush();          
-            writer.close();
+        writer.close();
     
       }//catch(TException e){
          //       e.printStackTrace();}

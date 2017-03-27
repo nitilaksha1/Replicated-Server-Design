@@ -124,8 +124,10 @@ public class ReplicatedServerHandler implements ReplicatedBankService.Iface {
 	private int nodeCount;
 	private BankHandler bankhandler;
 	private volatile int reqID;
+	private PrintWriter writer;
 
 	public ReplicatedServerHandler () {
+
 		clock = new LamportClock();
 		map = new HashMap<>();
 		reqQueue = new LinkedList<>();
@@ -134,7 +136,6 @@ public class ReplicatedServerHandler implements ReplicatedBankService.Iface {
 		servermap = new HashMap<>();
 		nodeCount = 0;
 		reqID = 0;
-
 	}
 
 	public void setNodeCountAndList (String filename) throws FileNotFoundException{
@@ -155,27 +156,37 @@ public class ReplicatedServerHandler implements ReplicatedBankService.Iface {
 			nodeCount += 1;
 				
 		}
-		
-		//Rest of server logic
+
 		scan.close();
 	}
 
+	public void initLogFile (String filename) throws FileNotFoundException {
+		writer = new PrintWriter (filename + "_" + getID());
+	}
 
+	public void closeLogFile () {
+
+		writer.close();
+	}
+	
     public void setID(int id){
-        this.id = id;
+
+		this.id = id;
     }
 
     public int getID(){
-        return this.id;
+
+		return this.id;
     }
 		
 	@Override
 	public String multi_deposit (int uID, int amount, int timestamp, int serverid) { 
-		return "";
+
+		return "NA";
 	}
 
 	@Override
-	public int multi_getBalance 	(int uID, int timestamp, int serverid) {
+	public int multi_getBalance (int uID, int timestamp, int serverid) {
 
 		clock.SetClockValueForReceive(timestamp);
 		clock.SetClockValueForSend();
@@ -201,10 +212,14 @@ public class ReplicatedServerHandler implements ReplicatedBankService.Iface {
 	@Override
 	public void multi_transfer_server (int uID, int targuID, int amount, int timestamp, int serverid, String requestID) {
 			System.out.println("Multicast received");
+
 			TransferRequest transreq;
+
 			synchronized (reqQueue){
-				System.out.println("Lock taken by id: "+ getID());
+
 				clock.SetClockValueForReceive(timestamp);
+				writer.println("CLNT-ID" + "	SRV_REQ		" + serverid + "	" + System.currentTimeMillis() + "	[" + clock.getClockValue() + "," + getID() + "]" + "	Transfer Operation" + "	Source ID: " + uID + "	Target ID: " + targuID + "	Amount " + amount);
+				writer.flush();
 				transreq = new TransferRequest("TransferRequest", uID, targuID, amount, clock.getClockValue(), nodeCount -1, requestID);
 				reqQueue.add((Request)transreq);
 			}
@@ -221,41 +236,31 @@ public class ReplicatedServerHandler implements ReplicatedBankService.Iface {
 
 				TProtocol protocol = new TBinaryProtocol(transport);
 				ReplicatedBankService.Client client = new ReplicatedBankService.Client(protocol);
-				client.multi_transfer_ack(requestID, id);
+
+				synchronized (clock) {
+					clock.SetClockValueForSend();
+				}
+
+				client.multi_transfer_ack(requestID, id, clock.getClockValue());
 
 			}catch(TTransportException e){}
 			 catch(TException e){}
-		    System.out.println("Multicast done");
 
+		    System.out.println("Multicast done");
 
 			while(true){
 				synchronized (reqQueue){
-					System.out.println("reqQueue acquired");
 					TransferRequest temp = (TransferRequest) reqQueue.peek();
 					try {
 
 						while (!temp.getReqID().equals(requestID) || (temp.getAckCount() != nodeCount - 1) ){
-							System.out.println("Boolean value of while loop: "+ temp.getReqID().equals(requestID));
-							System.out.println("Request ID in queue : "+ temp.getReqID());
-							System.out.println("Current request ID : "+ requestID);
-							System.out.println("AckCount: "+ temp.getAckCount());
 							reqQueue.wait();
-							System.out.println("Updated the queue head");
 							temp = (TransferRequest) reqQueue.peek();
 						}
 
 					}catch(InterruptedException e){}
-					System.out.println("Final AckCount: "+ temp.getAckCount());
 
-					System.out.println("Current Request Processed : " + temp.getReqID());
 					TransferRequest headReq = (TransferRequest) reqQueue.remove();
-					System.out.println("Queue Contents after Processing request: " + temp.getReqID());
-
-					Object[] requestArray = reqQueue.toArray();
-					for (int i = 0; i < reqQueue.size();i++) {
-
-						System.out.println(((TransferRequest)requestArray[i]).getReqID());
-					}
 
 					int src = headReq.getSourceAccUID();
 					int target = headReq.gettargetAccUID();
@@ -266,8 +271,6 @@ public class ReplicatedServerHandler implements ReplicatedBankService.Iface {
 					break;
 				}
 			}
-
-
 	}
 
 
@@ -280,6 +283,8 @@ public class ReplicatedServerHandler implements ReplicatedBankService.Iface {
 
 		synchronized (reqQueue) {
 			clock.SetClockValueForReceive(timestamp);
+			writer.println("CLNT-ID" + "	CLIENT_REQ	" + System.currentTimeMillis() + "	[" + clock.getClockValue() + "," + getID() + "]" + "	Transfer Operation" + "	Source ID: " + uID + "	Target ID: " + targuID + "	Amount " + amount);
+			writer.flush();
 			reqID += 1;
 			currentRequest = getID() + "_" + reqID;
 			transreq = new TransferRequest("TransferRequest", uID, targuID, amount, clock.getClockValue(), 0, currentRequest);
@@ -287,22 +292,19 @@ public class ReplicatedServerHandler implements ReplicatedBankService.Iface {
 		}
 		try{
 				for (int i = 0; i < nodeCount - 1; i++) {
-					System.out.println("Nodes remaining : " + i);
 					String hostname = serverlist.get(i).hostname;
 					int portnumber = serverlist.get(i).portnumber;
 
 					TTransport transport;
 					transport = new TSocket(hostname, portnumber);
-					System.out.println("Hostname: "+ hostname + "Portname: "+ portnumber);
 					transport.open();
 
 					TProtocol protocol = new  TBinaryProtocol(transport);
 
 					ReplicatedBankService.Client client = new ReplicatedBankService.Client(protocol);
-					System.out.println("Client object created");
 					clock.SetClockValueForSend();
-					System.out.println("Clock incremented");
 					client.multi_transfer_server(uID, targuID, amount, clock.getClockValue() , id, currentRequest);
+
 					System.out.println("serverid: " + serverid + " multi_transfer complete");
 					transport.close();
 
@@ -320,28 +322,15 @@ public class ReplicatedServerHandler implements ReplicatedBankService.Iface {
 				try {
 
 					while (!temp.getReqID().equals(currentRequest) || (temp.getAckCount() != nodeCount - 1) ){
-						System.out.println("Boolean value of while loop: "+ temp.getReqID().equals(currentRequest));
-						System.out.println("Request ID in queue : "+ temp.getReqID());
-						System.out.println("Current request ID : "+ currentRequest);
-						System.out.println("AckCount: "+ temp.getAckCount());
-							reqQueue.wait();
-						System.out.println("Updated the queue head");
+						reqQueue.wait();
 						temp = (TransferRequest) reqQueue.peek();
 					}
 
 				}catch(InterruptedException e){}
-				System.out.println("Final AckCount: "+ temp.getAckCount());
 
-				System.out.println("Current Request Processed : " + temp.getReqID());
 				TransferRequest headReq = (TransferRequest) reqQueue.remove();
-				System.out.println("Queue Contents after Processing request: " + temp.getReqID());
-
-				Object[] requestArray = reqQueue.toArray();
-				for (int i = 0; i < reqQueue.size();i++) {
-
-					System.out.println(((TransferRequest)requestArray[i]).getReqID());
-				}
-
+				writer.println("CLNT-ID" + "	PROCESS	" + System.currentTimeMillis() + "	[" + clock.getClockValue() + "," + getID() + "]");
+				writer.flush();
 				int src = headReq.getSourceAccUID();
 				int target = headReq.gettargetAccUID();
 				int amt = headReq.getAmount();
@@ -369,26 +358,24 @@ public class ReplicatedServerHandler implements ReplicatedBankService.Iface {
 	}
 
 	@Override
-	public void multi_transfer_ack	(String requestID, int serverid) {
+	public void multi_transfer_ack	(String requestID, int serverid, int timestamp) {
 		System.out.println("Ack received");
+
 		Object[] requestArray;
 		synchronized (reqQueue) {
+			clock.SetClockValueForReceive(timestamp);
 			requestArray = reqQueue.toArray();
 
 
 			for (int i = 0; i < reqQueue.size(); i++) {
 				TransferRequest req = (TransferRequest) requestArray[i];
-				System.out.println("Request Id: " + req.getReqID() + " AckCount: " + req.getAckCount());
 
 				if (req.getReqID().equals(requestID)) {
 					req.setAckCount();
 
-					System.out.println("After Setting Request Id: " + req.getReqID() + " AckCount: " + req.getAckCount());
 					if (req.getAckCount() == nodeCount - 1) {
-						System.out.println("Inside Ack Notify");
 						reqQueue.notifyAll();
 					}
-
 
 					break;
 				}

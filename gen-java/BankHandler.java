@@ -37,24 +37,14 @@ public class BankHandler {
 	private static HashMap<Integer, Account> map; 
 	private int accountid;
 	private Object lock = new Object();
-     	private int id=0;
-	private static PrintWriter writer;
+	private int id=0;
 	  
 	public BankHandler () {
 
 		map = new HashMap<Integer, Account>();
 		accountid = 1;
 
-		try {
-
-			writer = new PrintWriter("serverLog.txt", "UTF-8");
-		} catch (FileNotFoundException e){
-
-		} catch (UnsupportedEncodingException e){
-		}
-
 	}
-
 
 	public void setID(int id){
 		this.id = id;
@@ -68,8 +58,6 @@ public class BankHandler {
 
 		Account acc = new Account(accountid, 0);
 		map.put(accountid, acc);
-		writer.println("RequestName: createAccount "+ "Return status: "+accountid);
-		writer.flush(); 
 		accountid++;
 		return acc.getUID();
 	}
@@ -81,14 +69,9 @@ public class BankHandler {
 			Account acc = map.get(uID);
 			acc.deposit(amount);
 
-			writer.println("RequestName: Deposit "+ "Parameters : "+ uID + " "+amount + " Return status: OK");
-			writer.flush();
 			return "OK";
 		}
 
-		writer.println("RequestName: Deposit "+ "Parameters : "+ uID + " "+amount + " Return status: FAILED");
-		writer.flush();
-	
 		return "FAILED";
 	}
 
@@ -98,14 +81,8 @@ public class BankHandler {
 
 			Account acc = map.get(uID);
 
-			writer.println("RequestName: GetBalance "+ "Parameters : "+ uID + " Return status: "+ acc.getBalance());
-			writer.flush();
-	
 			return acc.getBalance();
-		}		
-
-		writer.println("RequestName: GetBalance "+ "Parameters : "+ uID + " Return status: 0");
-		writer.flush();
+		}
 
 		return 0;	
 	}
@@ -121,15 +98,11 @@ public class BankHandler {
 				
 				if ((acc1.getBalance() - amount) < 0) {
 
-					writer.println("RequestName: Transfer "+ "Parameters : "+ srcuID + " "+targuID + " "+ amount + " Return status: FAILED");
-					writer.flush();
 					return "FAILED";
 				}
 
 				acc1.withdraw(amount);
 				acc2.deposit(amount);
-				writer.println("RequestName: Transfer "+ "Parameters : "+ srcuID + " "+targuID + " "+ amount + " Return status: OK");
-				writer.flush();
 
 				return "OK";	
 			}	
