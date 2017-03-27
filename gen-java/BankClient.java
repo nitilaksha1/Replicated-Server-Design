@@ -39,15 +39,11 @@ public class BankClient {
         return accountlist;
       }
 
-      int balanceRequest(ReplicatedBankService.Client client, PrintWriter writer, int id) throws TException{
-
-        return client.multi_getBalance(id,0, -1);
-      }
 
       void transferRequest(ReplicatedBankService.Client client, PrintWriter writer, int src, int target, int amount, int srvid) throws TException{
 
 		System.out.println("Inside transferRequest");
-        String s= client.multi_transfer(src,target,amount,0, -1);
+        String s= client.multi_transfer(src,target,amount,new TimeStamp(0,-1), -1);
 		System.out.println("Request Processed: Result: " + s);
         writer.println("CLNT-ID   " + srvid + "   RSP   " + System.currentTimeMillis() + "  " + s);
         writer.flush();
@@ -85,7 +81,7 @@ public class BankClient {
             final BankClient bc = new BankClient();
             final String hostname = args[0];
             int threadCount = Integer.parseInt(args[2]);
-            final int iterationCount = 10;
+            final int iterationCount = 100;
             final String filename = args[1];
             bc.listServers(filename);
             final PrintWriter writer = new PrintWriter("clientLog.txt", "UTF-8");

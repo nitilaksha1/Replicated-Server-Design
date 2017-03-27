@@ -12,7 +12,7 @@ public class LamportClock {
 		clockvalue += 1;
 	}
 
-	public void SetClockValueForReceive (int timestamp) {
+	public void SetClockValueForReceive (TimeStamp timestamp) {
 		if (timestamp == 0) {
 
 			clockvalue += 1;
