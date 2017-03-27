@@ -125,6 +125,7 @@ public class ReplicatedServerHandler implements ReplicatedBankService.Iface {
 	private BankHandler bankhandler;
 	private volatile int reqID;
 	private PrintWriter writer;
+	private ArrayList<Integer> accountList;
 
 	public ReplicatedServerHandler () {
 
@@ -136,6 +137,7 @@ public class ReplicatedServerHandler implements ReplicatedBankService.Iface {
 		servermap = new HashMap<>();
 		nodeCount = 0;
 		reqID = 0;
+		accountList = new ArrayList<>();
 	}
 
 	public void setNodeCountAndList (String filename) throws FileNotFoundException{
@@ -158,6 +160,14 @@ public class ReplicatedServerHandler implements ReplicatedBankService.Iface {
 		}
 
 		scan.close();
+	}
+
+	public void setAccountList(ArrayList<Integer> serverList){
+		accountList = serverList;
+	}
+
+	public ArrayList<Integer> getAccountList(){
+		return accountList;
 	}
 
 	public void initLogFile (String filename) throws FileNotFoundException {
@@ -205,6 +215,58 @@ public class ReplicatedServerHandler implements ReplicatedBankService.Iface {
 		map.remove(timestamp+2);
 
 		return res;
+
+	}
+
+	@Override
+	public void stop_execution(int timestamp){
+
+		synchronized (clock){
+			clock.SetClockValueForReceive(timestamp);
+		}
+
+		ArrayList<Integer> list = getAccountList();
+		for(int i =0 ; i < list.size(); i++){
+			System.out.println("Account id: " + list.get(i) + " Balance: " + bankhandler.getBalance(list.get(i)));
+		}
+	}
+
+	@Override
+	public void halt(){
+
+		try{
+			for (int i = 0; i < nodeCount - 1; i++) {
+				String hostname = serverlist.get(i).hostname;
+				int portnumber = serverlist.get(i).portnumber;
+
+				TTransport transport;
+				transport = new TSocket(hostname, portnumber);
+				transport.open();
+
+				TProtocol protocol = new  TBinaryProtocol(transport);
+
+				ReplicatedBankService.Client client = new ReplicatedBankService.Client(protocol);
+				clock.SetClockValueForSend();
+				client.stop_execution(clock.getClockValue());
+
+				System.out.println("serverid: " + "0" + " multi_halt complete");
+				transport.close();
+
+			}
+		} catch (TTransportException e) {
+			e.printStackTrace();
+		} catch (TException e) {
+			e.printStackTrace();
+		}
+
+		ArrayList<Integer> list = getAccountList();
+		for(int i =0 ; i < list.size(); i++){
+			System.out.println("Account id: " + list.get(i) + " Balance: " + bankhandler.getBalance(list.get(i)));
+		}
+
+
+
+
 
 	}
 

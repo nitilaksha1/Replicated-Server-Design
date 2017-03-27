@@ -78,7 +78,7 @@ public class BankClient {
       }
 
 
-    public static void main(String[] args){
+    public static void main(String[] args) {
 
 
       try{
@@ -150,9 +150,33 @@ public class BankClient {
                 try{t.join();}catch(InterruptedException e){}
             }
          
-        }
+      }
 
-        writer.close();
+      String halthost = "localhost";
+      int haltport = 9000;
+
+      for (int i = 0; i < serverlist.size(); i++) {
+          Servers serverobj = serverlist.get(i);
+          if (serverobj.serverid == 0) {
+              halthost = serverobj.hostname;
+              haltport = serverobj.portnumber;
+              break;
+          }
+      }
+
+      TTransport transport;
+      transport = new TSocket(halthost, haltport);
+      transport.open();
+      System.out.println("Open.transport sucess!!");
+
+      TProtocol protocol = new  TBinaryProtocol(transport);
+      ReplicatedBankService.Client client = new ReplicatedBankService.Client(protocol);
+
+      client.halt();
+
+      transport.close();
+
+      writer.close();
     
       }//catch(TException e){
          //       e.printStackTrace();}
@@ -160,7 +184,8 @@ public class BankClient {
                 e.printStackTrace(); 
       }catch(UnsupportedEncodingException e){ 
                 e.printStackTrace();
-      }
+      } catch (TTransportException e) {}
+        catch (TException e) {}
       
     }
 }

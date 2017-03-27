@@ -16,9 +16,11 @@ public class BankServer {
 	public static ReplicatedServerHandler handler;
 	public static ReplicatedBankService.Processor processor;
     public static int serverportnumber;
+    public static ArrayList<Integer> accList;
 
   	public BankServer(){
-           serverportnumber = 9999;
+
+        serverportnumber = 9999;
 	}
 
   public static void main(String [] args) {
@@ -64,10 +66,14 @@ public class BankServer {
 
 	  BankHandler bh = new BankHandler();
 
+      accList = new ArrayList<>();
+
       for(int i = 0; i < numberOfAccounts; i++){
 		  int accID = bh.createAccount();
+          accList.add(accID);
 		  String creationStatus = bh.deposit(accID,1000);	 
       }
+      handler.setAccountList(accList);
 
       Runnable simple = new Runnable() {
         public void run() {
