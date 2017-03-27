@@ -85,26 +85,25 @@ public class BankClient {
             final BankClient bc = new BankClient();
             final String hostname = args[0];
             int threadCount = Integer.parseInt(args[2]);
-            final int iterationCount = 100;
+            final int iterationCount = 1;
             final String filename = args[1];
             bc.listServers(filename);
             final PrintWriter writer = new PrintWriter("clientLog.txt", "UTF-8");
 
 
             
-      for(int i=0; i < 1; i++)
-      {
 
-            Servers serverObject = bc.getRandomServer();
-            final String host = serverObject.hostname;
-            final int port = serverObject.portnumber;
-            final int srvid = serverObject.serverid;
-   
+
            //ExecutorService threads = Executors.newFixedThreadPool(threadCount);
             
             for (int j = 0; j < threadCount; j++) {
+                Servers serverObject = bc.getRandomServer();
+                final String host = serverObject.hostname;
+                final int port = serverObject.portnumber;
+                final int srvid = serverObject.serverid;
 
-                  Thread t = new Thread( new Runnable() 
+
+                Thread t = new Thread( new Runnable()
                 {               
                         public void run () {
                 
@@ -149,8 +148,7 @@ public class BankClient {
             for(Thread t : th){
                 try{t.join();}catch(InterruptedException e){}
             }
-         
-      }
+
 
       String halthost = "localhost";
       int haltport = 9000;
