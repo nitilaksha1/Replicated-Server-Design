@@ -1,3 +1,7 @@
 balch
 localhost 0 9000
 localhost 1 9001
+localhost 2 9002
+localhost 3 9003
+localhost 4 9004
+

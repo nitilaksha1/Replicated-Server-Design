@@ -38,7 +38,7 @@ public class ReplicatedBankService {
 
     public int multi_getBalance(int uID, TimeStamp timestamp, int serverid) throws org.apache.thrift.TException;
 
-    public String multi_transfer(int srcuID, int targuID, int amount, TimeStamp timestamp, int serverid) throws org.apache.thrift.TException;
+    public String multi_transfer(int srcuID, int targuID, int amount, TimeStamp timestamp, int serverid, long clientid) throws org.apache.thrift.TException;
 
     public void multi_deposit_ack(TimeStamp reqTimeStamp, int serverid) throws org.apache.thrift.TException;
 
@@ -46,7 +46,7 @@ public class ReplicatedBankService {
 
     public void multi_transfer_ack(String requestID, int serverid, TimeStamp timestamp) throws org.apache.thrift.TException;
 
-    public void multi_transfer_server(int srcuID, int targuID, int amount, TimeStamp timestamp, int serverid, String requestID) throws org.apache.thrift.TException;
+    public void multi_transfer_server(int srcuID, int targuID, int amount, TimeStamp timestamp, int serverid, String requestID, long clientid) throws org.apache.thrift.TException;
 
     public void halt() throws org.apache.thrift.TException;
 
@@ -60,7 +60,7 @@ public class ReplicatedBankService {
 
     public void multi_getBalance(int uID, TimeStamp timestamp, int serverid, org.apache.thrift.async.AsyncMethodCallback resultHandler) throws org.apache.thrift.TException;
 
-    public void multi_transfer(int srcuID, int targuID, int amount, TimeStamp timestamp, int serverid, org.apache.thrift.async.AsyncMethodCallback resultHandler) throws org.apache.thrift.TException;
+    public void multi_transfer(int srcuID, int targuID, int amount, TimeStamp timestamp, int serverid, long clientid, org.apache.thrift.async.AsyncMethodCallback resultHandler) throws org.apache.thrift.TException;
 
     public void multi_deposit_ack(TimeStamp reqTimeStamp, int serverid, org.apache.thrift.async.AsyncMethodCallback resultHandler) throws org.apache.thrift.TException;
 
@@ -68,7 +68,7 @@ public class ReplicatedBankService {
 
     public void multi_transfer_ack(String requestID, int serverid, TimeStamp timestamp, org.apache.thrift.async.AsyncMethodCallback resultHandler) throws org.apache.thrift.TException;
 
-    public void multi_transfer_server(int srcuID, int targuID, int amount, TimeStamp timestamp, int serverid, String requestID, org.apache.thrift.async.AsyncMethodCallback resultHandler) throws org.apache.thrift.TException;
+    public void multi_transfer_server(int srcuID, int targuID, int amount, TimeStamp timestamp, int serverid, String requestID, long clientid, org.apache.thrift.async.AsyncMethodCallback resultHandler) throws org.apache.thrift.TException;
 
     public void halt(org.apache.thrift.async.AsyncMethodCallback resultHandler) throws org.apache.thrift.TException;
 
@@ -147,13 +147,13 @@ public class ReplicatedBankService {
       throw new org.apache.thrift.TApplicationException(org.apache.thrift.TApplicationException.MISSING_RESULT, "multi_getBalance failed: unknown result");
     }
 
-    public String multi_transfer(int srcuID, int targuID, int amount, TimeStamp timestamp, int serverid) throws org.apache.thrift.TException
+    public String multi_transfer(int srcuID, int targuID, int amount, TimeStamp timestamp, int serverid, long clientid) throws org.apache.thrift.TException
     {
-      send_multi_transfer(srcuID, targuID, amount, timestamp, serverid);
+      send_multi_transfer(srcuID, targuID, amount, timestamp, serverid, clientid);
       return recv_multi_transfer();
     }
 
-    public void send_multi_transfer(int srcuID, int targuID, int amount, TimeStamp timestamp, int serverid) throws org.apache.thrift.TException
+    public void send_multi_transfer(int srcuID, int targuID, int amount, TimeStamp timestamp, int serverid, long clientid) throws org.apache.thrift.TException
     {
       multi_transfer_args args = new multi_transfer_args();
       args.setSrcuID(srcuID);
@@ -161,6 +161,7 @@ public class ReplicatedBankService {
       args.setAmount(amount);
       args.setTimestamp(timestamp);
       args.setServerid(serverid);
+      args.setClientid(clientid);
       sendBase("multi_transfer", args);
     }
 
@@ -238,12 +239,12 @@ public class ReplicatedBankService {
       return;
     }
 
-    public void multi_transfer_server(int srcuID, int targuID, int amount, TimeStamp timestamp, int serverid, String requestID) throws org.apache.thrift.TException
+    public void multi_transfer_server(int srcuID, int targuID, int amount, TimeStamp timestamp, int serverid, String requestID, long clientid) throws org.apache.thrift.TException
     {
-      send_multi_transfer_server(srcuID, targuID, amount, timestamp, serverid, requestID);
+      send_multi_transfer_server(srcuID, targuID, amount, timestamp, serverid, requestID, clientid);
     }
 
-    public void send_multi_transfer_server(int srcuID, int targuID, int amount, TimeStamp timestamp, int serverid, String requestID) throws org.apache.thrift.TException
+    public void send_multi_transfer_server(int srcuID, int targuID, int amount, TimeStamp timestamp, int serverid, String requestID, long clientid) throws org.apache.thrift.TException
     {
       multi_transfer_server_args args = new multi_transfer_server_args();
       args.setSrcuID(srcuID);
@@ -252,6 +253,7 @@ public class ReplicatedBankService {
       args.setTimestamp(timestamp);
       args.setServerid(serverid);
       args.setRequestID(requestID);
+      args.setClientid(clientid);
       sendBase("multi_transfer_server", args);
     }
 
@@ -391,9 +393,9 @@ public class ReplicatedBankService {
       }
     }
 
-    public void multi_transfer(int srcuID, int targuID, int amount, TimeStamp timestamp, int serverid, org.apache.thrift.async.AsyncMethodCallback resultHandler) throws org.apache.thrift.TException {
+    public void multi_transfer(int srcuID, int targuID, int amount, TimeStamp timestamp, int serverid, long clientid, org.apache.thrift.async.AsyncMethodCallback resultHandler) throws org.apache.thrift.TException {
       checkReady();
-      multi_transfer_call method_call = new multi_transfer_call(srcuID, targuID, amount, timestamp, serverid, resultHandler, this, ___protocolFactory, ___transport);
+      multi_transfer_call method_call = new multi_transfer_call(srcuID, targuID, amount, timestamp, serverid, clientid, resultHandler, this, ___protocolFactory, ___transport);
       this.___currentMethod = method_call;
       ___manager.call(method_call);
     }
@@ -404,13 +406,15 @@ public class ReplicatedBankService {
       private int amount;
       private TimeStamp timestamp;
       private int serverid;
-      public multi_transfer_call(int srcuID, int targuID, int amount, TimeStamp timestamp, int serverid, org.apache.thrift.async.AsyncMethodCallback resultHandler, org.apache.thrift.async.TAsyncClient client, org.apache.thrift.protocol.TProtocolFactory protocolFactory, org.apache.thrift.transport.TNonblockingTransport transport) throws org.apache.thrift.TException {
+      private long clientid;
+      public multi_transfer_call(int srcuID, int targuID, int amount, TimeStamp timestamp, int serverid, long clientid, org.apache.thrift.async.AsyncMethodCallback resultHandler, org.apache.thrift.async.TAsyncClient client, org.apache.thrift.protocol.TProtocolFactory protocolFactory, org.apache.thrift.transport.TNonblockingTransport transport) throws org.apache.thrift.TException {
         super(client, protocolFactory, transport, resultHandler, false);
         this.srcuID = srcuID;
         this.targuID = targuID;
         this.amount = amount;
         this.timestamp = timestamp;
         this.serverid = serverid;
+        this.clientid = clientid;
       }
 
       public void write_args(org.apache.thrift.protocol.TProtocol prot) throws org.apache.thrift.TException {
@@ -421,6 +425,7 @@ public class ReplicatedBankService {
         args.setAmount(amount);
         args.setTimestamp(timestamp);
         args.setServerid(serverid);
+        args.setClientid(clientid);
         args.write(prot);
         prot.writeMessageEnd();
       }
@@ -543,9 +548,9 @@ public class ReplicatedBankService {
       }
     }
 
-    public void multi_transfer_server(int srcuID, int targuID, int amount, TimeStamp timestamp, int serverid, String requestID, org.apache.thrift.async.AsyncMethodCallback resultHandler) throws org.apache.thrift.TException {
+    public void multi_transfer_server(int srcuID, int targuID, int amount, TimeStamp timestamp, int serverid, String requestID, long clientid, org.apache.thrift.async.AsyncMethodCallback resultHandler) throws org.apache.thrift.TException {
       checkReady();
-      multi_transfer_server_call method_call = new multi_transfer_server_call(srcuID, targuID, amount, timestamp, serverid, requestID, resultHandler, this, ___protocolFactory, ___transport);
+      multi_transfer_server_call method_call = new multi_transfer_server_call(srcuID, targuID, amount, timestamp, serverid, requestID, clientid, resultHandler, this, ___protocolFactory, ___transport);
       this.___currentMethod = method_call;
       ___manager.call(method_call);
     }
@@ -557,7 +562,8 @@ public class ReplicatedBankService {
       private TimeStamp timestamp;
       private int serverid;
       private String requestID;
-      public multi_transfer_server_call(int srcuID, int targuID, int amount, TimeStamp timestamp, int serverid, String requestID, org.apache.thrift.async.AsyncMethodCallback resultHandler, org.apache.thrift.async.TAsyncClient client, org.apache.thrift.protocol.TProtocolFactory protocolFactory, org.apache.thrift.transport.TNonblockingTransport transport) throws org.apache.thrift.TException {
+      private long clientid;
+      public multi_transfer_server_call(int srcuID, int targuID, int amount, TimeStamp timestamp, int serverid, String requestID, long clientid, org.apache.thrift.async.AsyncMethodCallback resultHandler, org.apache.thrift.async.TAsyncClient client, org.apache.thrift.protocol.TProtocolFactory protocolFactory, org.apache.thrift.transport.TNonblockingTransport transport) throws org.apache.thrift.TException {
         super(client, protocolFactory, transport, resultHandler, true);
         this.srcuID = srcuID;
         this.targuID = targuID;
@@ -565,6 +571,7 @@ public class ReplicatedBankService {
         this.timestamp = timestamp;
         this.serverid = serverid;
         this.requestID = requestID;
+        this.clientid = clientid;
       }
 
       public void write_args(org.apache.thrift.protocol.TProtocol prot) throws org.apache.thrift.TException {
@@ -576,6 +583,7 @@ public class ReplicatedBankService {
         args.setTimestamp(timestamp);
         args.setServerid(serverid);
         args.setRequestID(requestID);
+        args.setClientid(clientid);
         args.write(prot);
         prot.writeMessageEnd();
       }
@@ -731,7 +739,7 @@ public class ReplicatedBankService {
 
       public multi_transfer_result getResult(I iface, multi_transfer_args args) throws org.apache.thrift.TException {
         multi_transfer_result result = new multi_transfer_result();
-        result.success = iface.multi_transfer(args.srcuID, args.targuID, args.amount, args.timestamp, args.serverid);
+        result.success = iface.multi_transfer(args.srcuID, args.targuID, args.amount, args.timestamp, args.serverid, args.clientid);
         return result;
       }
     }
@@ -810,7 +818,7 @@ public class ReplicatedBankService {
       }
 
       public org.apache.thrift.TBase getResult(I iface, multi_transfer_server_args args) throws org.apache.thrift.TException {
-        iface.multi_transfer_server(args.srcuID, args.targuID, args.amount, args.timestamp, args.serverid, args.requestID);
+        iface.multi_transfer_server(args.srcuID, args.targuID, args.amount, args.timestamp, args.serverid, args.requestID, args.clientid);
         return null;
       }
     }
@@ -1030,7 +1038,7 @@ public class ReplicatedBankService {
       }
 
       public void start(I iface, multi_transfer_args args, org.apache.thrift.async.AsyncMethodCallback<String> resultHandler) throws TException {
-        iface.multi_transfer(args.srcuID, args.targuID, args.amount, args.timestamp, args.serverid,resultHandler);
+        iface.multi_transfer(args.srcuID, args.targuID, args.amount, args.timestamp, args.serverid, args.clientid,resultHandler);
       }
     }
 
@@ -1208,7 +1216,7 @@ public class ReplicatedBankService {
       }
 
       public void start(I iface, multi_transfer_server_args args, org.apache.thrift.async.AsyncMethodCallback<Void> resultHandler) throws TException {
-        iface.multi_transfer_server(args.srcuID, args.targuID, args.amount, args.timestamp, args.serverid, args.requestID,resultHandler);
+        iface.multi_transfer_server(args.srcuID, args.targuID, args.amount, args.timestamp, args.serverid, args.requestID, args.clientid,resultHandler);
       }
     }
 
@@ -3226,6 +3234,7 @@ public class ReplicatedBankService {
     private static final org.apache.thrift.protocol.TField AMOUNT_FIELD_DESC = new org.apache.thrift.protocol.TField("amount", org.apache.thrift.protocol.TType.I32, (short)3);
     private static final org.apache.thrift.protocol.TField TIMESTAMP_FIELD_DESC = new org.apache.thrift.protocol.TField("timestamp", org.apache.thrift.protocol.TType.STRUCT, (short)4);
     private static final org.apache.thrift.protocol.TField SERVERID_FIELD_DESC = new org.apache.thrift.protocol.TField("serverid", org.apache.thrift.protocol.TType.I32, (short)5);
+    private static final org.apache.thrift.protocol.TField CLIENTID_FIELD_DESC = new org.apache.thrift.protocol.TField("clientid", org.apache.thrift.protocol.TType.I64, (short)6);
 
     private static final Map<Class<? extends IScheme>, SchemeFactory> schemes = new HashMap<Class<? extends IScheme>, SchemeFactory>();
     static {
@@ -3238,6 +3247,7 @@ public class ReplicatedBankService {
     public int amount; // required
     public TimeStamp timestamp; // required
     public int serverid; // required
+    public long clientid; // required
 
     /** The set of fields this struct contains, along with convenience methods for finding and manipulating them. */
     public enum _Fields implements org.apache.thrift.TFieldIdEnum {
@@ -3245,7 +3255,8 @@ public class ReplicatedBankService {
       TARGU_ID((short)2, "targuID"),
       AMOUNT((short)3, "amount"),
       TIMESTAMP((short)4, "timestamp"),
-      SERVERID((short)5, "serverid");
+      SERVERID((short)5, "serverid"),
+      CLIENTID((short)6, "clientid");
 
       private static final Map<String, _Fields> byName = new HashMap<String, _Fields>();
 
@@ -3270,6 +3281,8 @@ public class ReplicatedBankService {
             return TIMESTAMP;
           case 5: // SERVERID
             return SERVERID;
+          case 6: // CLIENTID
+            return CLIENTID;
           default:
             return null;
         }
@@ -3314,6 +3327,7 @@ public class ReplicatedBankService {
     private static final int __TARGUID_ISSET_ID = 1;
     private static final int __AMOUNT_ISSET_ID = 2;
     private static final int __SERVERID_ISSET_ID = 3;
+    private static final int __CLIENTID_ISSET_ID = 4;
     private byte __isset_bitfield = 0;
     public static final Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> metaDataMap;
     static {
@@ -3328,6 +3342,8 @@ public class ReplicatedBankService {
           new org.apache.thrift.meta_data.StructMetaData(org.apache.thrift.protocol.TType.STRUCT, TimeStamp.class)));
       tmpMap.put(_Fields.SERVERID, new org.apache.thrift.meta_data.FieldMetaData("serverid", org.apache.thrift.TFieldRequirementType.DEFAULT, 
           new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.I32)));
+      tmpMap.put(_Fields.CLIENTID, new org.apache.thrift.meta_data.FieldMetaData("clientid", org.apache.thrift.TFieldRequirementType.DEFAULT, 
+          new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.I64)));
       metaDataMap = Collections.unmodifiableMap(tmpMap);
       org.apache.thrift.meta_data.FieldMetaData.addStructMetaDataMap(multi_transfer_args.class, metaDataMap);
     }
@@ -3340,7 +3356,8 @@ public class ReplicatedBankService {
       int targuID,
       int amount,
       TimeStamp timestamp,
-      int serverid)
+      int serverid,
+      long clientid)
     {
       this();
       this.srcuID = srcuID;
@@ -3352,6 +3369,8 @@ public class ReplicatedBankService {
       this.timestamp = timestamp;
       this.serverid = serverid;
       setServeridIsSet(true);
+      this.clientid = clientid;
+      setClientidIsSet(true);
     }
 
     /**
@@ -3366,6 +3385,7 @@ public class ReplicatedBankService {
         this.timestamp = new TimeStamp(other.timestamp);
       }
       this.serverid = other.serverid;
+      this.clientid = other.clientid;
     }
 
     public multi_transfer_args deepCopy() {
@@ -3383,6 +3403,8 @@ public class ReplicatedBankService {
       this.timestamp = null;
       setServeridIsSet(false);
       this.serverid = 0;
+      setClientidIsSet(false);
+      this.clientid = 0;
     }
 
     public int getSrcuID() {
@@ -3501,6 +3523,29 @@ public class ReplicatedBankService {
       __isset_bitfield = EncodingUtils.setBit(__isset_bitfield, __SERVERID_ISSET_ID, value);
     }
 
+    public long getClientid() {
+      return this.clientid;
+    }
+
+    public multi_transfer_args setClientid(long clientid) {
+      this.clientid = clientid;
+      setClientidIsSet(true);
+      return this;
+    }
+
+    public void unsetClientid() {
+      __isset_bitfield = EncodingUtils.clearBit(__isset_bitfield, __CLIENTID_ISSET_ID);
+    }
+
+    /** Returns true if field clientid is set (has been assigned a value) and false otherwise */
+    public boolean isSetClientid() {
+      return EncodingUtils.testBit(__isset_bitfield, __CLIENTID_ISSET_ID);
+    }
+
+    public void setClientidIsSet(boolean value) {
+      __isset_bitfield = EncodingUtils.setBit(__isset_bitfield, __CLIENTID_ISSET_ID, value);
+    }
+
     public void setFieldValue(_Fields field, Object value) {
       switch (field) {
       case SRCU_ID:
@@ -3543,6 +3588,14 @@ public class ReplicatedBankService {
         }
         break;
 
+      case CLIENTID:
+        if (value == null) {
+          unsetClientid();
+        } else {
+          setClientid((Long)value);
+        }
+        break;
+
       }
     }
 
@@ -3562,6 +3615,9 @@ public class ReplicatedBankService {
 
       case SERVERID:
         return Integer.valueOf(getServerid());
+
+      case CLIENTID:
+        return Long.valueOf(getClientid());
 
       }
       throw new IllegalStateException();
@@ -3584,6 +3640,8 @@ public class ReplicatedBankService {
         return isSetTimestamp();
       case SERVERID:
         return isSetServerid();
+      case CLIENTID:
+        return isSetClientid();
       }
       throw new IllegalStateException();
     }
@@ -3643,6 +3701,15 @@ public class ReplicatedBankService {
         if (!(this_present_serverid && that_present_serverid))
           return false;
         if (this.serverid != that.serverid)
+          return false;
+      }
+
+      boolean this_present_clientid = true;
+      boolean that_present_clientid = true;
+      if (this_present_clientid || that_present_clientid) {
+        if (!(this_present_clientid && that_present_clientid))
+          return false;
+        if (this.clientid != that.clientid)
           return false;
       }
 
@@ -3712,6 +3779,16 @@ public class ReplicatedBankService {
           return lastComparison;
         }
       }
+      lastComparison = Boolean.valueOf(isSetClientid()).compareTo(other.isSetClientid());
+      if (lastComparison != 0) {
+        return lastComparison;
+      }
+      if (isSetClientid()) {
+        lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.clientid, other.clientid);
+        if (lastComparison != 0) {
+          return lastComparison;
+        }
+      }
       return 0;
     }
 
@@ -3754,6 +3831,10 @@ public class ReplicatedBankService {
       if (!first) sb.append(", ");
       sb.append("serverid:");
       sb.append(this.serverid);
+      first = false;
+      if (!first) sb.append(", ");
+      sb.append("clientid:");
+      sb.append(this.clientid);
       first = false;
       sb.append(")");
       return sb.toString();
@@ -3844,6 +3925,14 @@ public class ReplicatedBankService {
                 org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
               }
               break;
+            case 6: // CLIENTID
+              if (schemeField.type == org.apache.thrift.protocol.TType.I64) {
+                struct.clientid = iprot.readI64();
+                struct.setClientidIsSet(true);
+              } else { 
+                org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
+              }
+              break;
             default:
               org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
           }
@@ -3875,6 +3964,9 @@ public class ReplicatedBankService {
         }
         oprot.writeFieldBegin(SERVERID_FIELD_DESC);
         oprot.writeI32(struct.serverid);
+        oprot.writeFieldEnd();
+        oprot.writeFieldBegin(CLIENTID_FIELD_DESC);
+        oprot.writeI64(struct.clientid);
         oprot.writeFieldEnd();
         oprot.writeFieldStop();
         oprot.writeStructEnd();
@@ -3909,7 +4001,10 @@ public class ReplicatedBankService {
         if (struct.isSetServerid()) {
           optionals.set(4);
         }
-        oprot.writeBitSet(optionals, 5);
+        if (struct.isSetClientid()) {
+          optionals.set(5);
+        }
+        oprot.writeBitSet(optionals, 6);
         if (struct.isSetSrcuID()) {
           oprot.writeI32(struct.srcuID);
         }
@@ -3925,12 +4020,15 @@ public class ReplicatedBankService {
         if (struct.isSetServerid()) {
           oprot.writeI32(struct.serverid);
         }
+        if (struct.isSetClientid()) {
+          oprot.writeI64(struct.clientid);
+        }
       }
 
       @Override
       public void read(org.apache.thrift.protocol.TProtocol prot, multi_transfer_args struct) throws org.apache.thrift.TException {
         TTupleProtocol iprot = (TTupleProtocol) prot;
-        BitSet incoming = iprot.readBitSet(5);
+        BitSet incoming = iprot.readBitSet(6);
         if (incoming.get(0)) {
           struct.srcuID = iprot.readI32();
           struct.setSrcuIDIsSet(true);
@@ -3951,6 +4049,10 @@ public class ReplicatedBankService {
         if (incoming.get(4)) {
           struct.serverid = iprot.readI32();
           struct.setServeridIsSet(true);
+        }
+        if (incoming.get(5)) {
+          struct.clientid = iprot.readI64();
+          struct.setClientidIsSet(true);
         }
       }
     }
@@ -6529,6 +6631,7 @@ public class ReplicatedBankService {
     private static final org.apache.thrift.protocol.TField TIMESTAMP_FIELD_DESC = new org.apache.thrift.protocol.TField("timestamp", org.apache.thrift.protocol.TType.STRUCT, (short)4);
     private static final org.apache.thrift.protocol.TField SERVERID_FIELD_DESC = new org.apache.thrift.protocol.TField("serverid", org.apache.thrift.protocol.TType.I32, (short)5);
     private static final org.apache.thrift.protocol.TField REQUEST_ID_FIELD_DESC = new org.apache.thrift.protocol.TField("requestID", org.apache.thrift.protocol.TType.STRING, (short)6);
+    private static final org.apache.thrift.protocol.TField CLIENTID_FIELD_DESC = new org.apache.thrift.protocol.TField("clientid", org.apache.thrift.protocol.TType.I64, (short)7);
 
     private static final Map<Class<? extends IScheme>, SchemeFactory> schemes = new HashMap<Class<? extends IScheme>, SchemeFactory>();
     static {
@@ -6542,6 +6645,7 @@ public class ReplicatedBankService {
     public TimeStamp timestamp; // required
     public int serverid; // required
     public String requestID; // required
+    public long clientid; // required
 
     /** The set of fields this struct contains, along with convenience methods for finding and manipulating them. */
     public enum _Fields implements org.apache.thrift.TFieldIdEnum {
@@ -6550,7 +6654,8 @@ public class ReplicatedBankService {
       AMOUNT((short)3, "amount"),
       TIMESTAMP((short)4, "timestamp"),
       SERVERID((short)5, "serverid"),
-      REQUEST_ID((short)6, "requestID");
+      REQUEST_ID((short)6, "requestID"),
+      CLIENTID((short)7, "clientid");
 
       private static final Map<String, _Fields> byName = new HashMap<String, _Fields>();
 
@@ -6577,6 +6682,8 @@ public class ReplicatedBankService {
             return SERVERID;
           case 6: // REQUEST_ID
             return REQUEST_ID;
+          case 7: // CLIENTID
+            return CLIENTID;
           default:
             return null;
         }
@@ -6621,6 +6728,7 @@ public class ReplicatedBankService {
     private static final int __TARGUID_ISSET_ID = 1;
     private static final int __AMOUNT_ISSET_ID = 2;
     private static final int __SERVERID_ISSET_ID = 3;
+    private static final int __CLIENTID_ISSET_ID = 4;
     private byte __isset_bitfield = 0;
     public static final Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> metaDataMap;
     static {
@@ -6637,6 +6745,8 @@ public class ReplicatedBankService {
           new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.I32)));
       tmpMap.put(_Fields.REQUEST_ID, new org.apache.thrift.meta_data.FieldMetaData("requestID", org.apache.thrift.TFieldRequirementType.DEFAULT, 
           new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.STRING)));
+      tmpMap.put(_Fields.CLIENTID, new org.apache.thrift.meta_data.FieldMetaData("clientid", org.apache.thrift.TFieldRequirementType.DEFAULT, 
+          new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.I64)));
       metaDataMap = Collections.unmodifiableMap(tmpMap);
       org.apache.thrift.meta_data.FieldMetaData.addStructMetaDataMap(multi_transfer_server_args.class, metaDataMap);
     }
@@ -6650,7 +6760,8 @@ public class ReplicatedBankService {
       int amount,
       TimeStamp timestamp,
       int serverid,
-      String requestID)
+      String requestID,
+      long clientid)
     {
       this();
       this.srcuID = srcuID;
@@ -6663,6 +6774,8 @@ public class ReplicatedBankService {
       this.serverid = serverid;
       setServeridIsSet(true);
       this.requestID = requestID;
+      this.clientid = clientid;
+      setClientidIsSet(true);
     }
 
     /**
@@ -6680,6 +6793,7 @@ public class ReplicatedBankService {
       if (other.isSetRequestID()) {
         this.requestID = other.requestID;
       }
+      this.clientid = other.clientid;
     }
 
     public multi_transfer_server_args deepCopy() {
@@ -6698,6 +6812,8 @@ public class ReplicatedBankService {
       setServeridIsSet(false);
       this.serverid = 0;
       this.requestID = null;
+      setClientidIsSet(false);
+      this.clientid = 0;
     }
 
     public int getSrcuID() {
@@ -6840,6 +6956,29 @@ public class ReplicatedBankService {
       }
     }
 
+    public long getClientid() {
+      return this.clientid;
+    }
+
+    public multi_transfer_server_args setClientid(long clientid) {
+      this.clientid = clientid;
+      setClientidIsSet(true);
+      return this;
+    }
+
+    public void unsetClientid() {
+      __isset_bitfield = EncodingUtils.clearBit(__isset_bitfield, __CLIENTID_ISSET_ID);
+    }
+
+    /** Returns true if field clientid is set (has been assigned a value) and false otherwise */
+    public boolean isSetClientid() {
+      return EncodingUtils.testBit(__isset_bitfield, __CLIENTID_ISSET_ID);
+    }
+
+    public void setClientidIsSet(boolean value) {
+      __isset_bitfield = EncodingUtils.setBit(__isset_bitfield, __CLIENTID_ISSET_ID, value);
+    }
+
     public void setFieldValue(_Fields field, Object value) {
       switch (field) {
       case SRCU_ID:
@@ -6890,6 +7029,14 @@ public class ReplicatedBankService {
         }
         break;
 
+      case CLIENTID:
+        if (value == null) {
+          unsetClientid();
+        } else {
+          setClientid((Long)value);
+        }
+        break;
+
       }
     }
 
@@ -6912,6 +7059,9 @@ public class ReplicatedBankService {
 
       case REQUEST_ID:
         return getRequestID();
+
+      case CLIENTID:
+        return Long.valueOf(getClientid());
 
       }
       throw new IllegalStateException();
@@ -6936,6 +7086,8 @@ public class ReplicatedBankService {
         return isSetServerid();
       case REQUEST_ID:
         return isSetRequestID();
+      case CLIENTID:
+        return isSetClientid();
       }
       throw new IllegalStateException();
     }
@@ -7004,6 +7156,15 @@ public class ReplicatedBankService {
         if (!(this_present_requestID && that_present_requestID))
           return false;
         if (!this.requestID.equals(that.requestID))
+          return false;
+      }
+
+      boolean this_present_clientid = true;
+      boolean that_present_clientid = true;
+      if (this_present_clientid || that_present_clientid) {
+        if (!(this_present_clientid && that_present_clientid))
+          return false;
+        if (this.clientid != that.clientid)
           return false;
       }
 
@@ -7083,6 +7244,16 @@ public class ReplicatedBankService {
           return lastComparison;
         }
       }
+      lastComparison = Boolean.valueOf(isSetClientid()).compareTo(other.isSetClientid());
+      if (lastComparison != 0) {
+        return lastComparison;
+      }
+      if (isSetClientid()) {
+        lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.clientid, other.clientid);
+        if (lastComparison != 0) {
+          return lastComparison;
+        }
+      }
       return 0;
     }
 
@@ -7133,6 +7304,10 @@ public class ReplicatedBankService {
       } else {
         sb.append(this.requestID);
       }
+      first = false;
+      if (!first) sb.append(", ");
+      sb.append("clientid:");
+      sb.append(this.clientid);
       first = false;
       sb.append(")");
       return sb.toString();
@@ -7231,6 +7406,14 @@ public class ReplicatedBankService {
                 org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
               }
               break;
+            case 7: // CLIENTID
+              if (schemeField.type == org.apache.thrift.protocol.TType.I64) {
+                struct.clientid = iprot.readI64();
+                struct.setClientidIsSet(true);
+              } else { 
+                org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
+              }
+              break;
             default:
               org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
           }
@@ -7268,6 +7451,9 @@ public class ReplicatedBankService {
           oprot.writeString(struct.requestID);
           oprot.writeFieldEnd();
         }
+        oprot.writeFieldBegin(CLIENTID_FIELD_DESC);
+        oprot.writeI64(struct.clientid);
+        oprot.writeFieldEnd();
         oprot.writeFieldStop();
         oprot.writeStructEnd();
       }
@@ -7304,7 +7490,10 @@ public class ReplicatedBankService {
         if (struct.isSetRequestID()) {
           optionals.set(5);
         }
-        oprot.writeBitSet(optionals, 6);
+        if (struct.isSetClientid()) {
+          optionals.set(6);
+        }
+        oprot.writeBitSet(optionals, 7);
         if (struct.isSetSrcuID()) {
           oprot.writeI32(struct.srcuID);
         }
@@ -7323,12 +7512,15 @@ public class ReplicatedBankService {
         if (struct.isSetRequestID()) {
           oprot.writeString(struct.requestID);
         }
+        if (struct.isSetClientid()) {
+          oprot.writeI64(struct.clientid);
+        }
       }
 
       @Override
       public void read(org.apache.thrift.protocol.TProtocol prot, multi_transfer_server_args struct) throws org.apache.thrift.TException {
         TTupleProtocol iprot = (TTupleProtocol) prot;
-        BitSet incoming = iprot.readBitSet(6);
+        BitSet incoming = iprot.readBitSet(7);
         if (incoming.get(0)) {
           struct.srcuID = iprot.readI32();
           struct.setSrcuIDIsSet(true);
@@ -7353,6 +7545,10 @@ public class ReplicatedBankService {
         if (incoming.get(5)) {
           struct.requestID = iprot.readString();
           struct.setRequestIDIsSet(true);
+        }
+        if (incoming.get(6)) {
+          struct.clientid = iprot.readI64();
+          struct.setClientidIsSet(true);
         }
       }
     }

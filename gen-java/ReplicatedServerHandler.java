@@ -281,17 +281,12 @@ public class ReplicatedServerHandler implements ReplicatedBankService.Iface {
 		clock.SetClockValueForSend();
 		BalanceRequest balreq = new BalanceRequest ("BalanceRequest", uID, new TimeStamp(0,0), 0, "dummy");
 		reqQueue.add((Request)balreq);
-		
-		map.put (clock.getClockValue(), 0);
-
-		while (map.get(clock.getClockValue()) != nodeCount - 1);
 
 		//TODO: Check if condition for checking if head node has the same timestamp is required
 		BalanceRequest balreq1 = (BalanceRequest)reqQueue.remove();
 		int uid = balreq1.getAccUID();
 		
 		int res = bankhandler.getBalance(uid);
-		map.remove(clock.getClockValue());
 
 		return res;
 
@@ -383,13 +378,13 @@ public class ReplicatedServerHandler implements ReplicatedBankService.Iface {
 	//This is a dedicated function to handle the requests sent from another server
 	//serverID is used for getting the value of sender server
 	@Override
-	public void multi_transfer_server (int uID, int targuID, int amount, TimeStamp timestamp, int serverid, String requestID) {
+	public void multi_transfer_server (int uID, int targuID, int amount, TimeStamp timestamp, int serverid, String requestID, long clientid) {
 			System.out.println("Multicast received");
 			TransferRequest transreq;
 
 			synchronized (reqQueue){
 
-				writer.println("CLNT-ID" + "	SRV_REQ		" + serverid + "	" + System.currentTimeMillis() + "	[" + clock.getClockValue() + "," + getID() + "]" + "	Transfer Operation" + "	Source ID: " + uID + "	Target ID: " + targuID + "	Amount " + amount);
+				writer.println(clientid + "	SRV_REQ		" + serverid + "	" + System.currentTimeMillis() + "	[" + clock.getClockValue() + "," + getID() + "]" + "	Transfer Operation" + "	Source ID: " + uID + "	Target ID: " + targuID + "	Amount " + amount);
 				writer.flush();
 				transreq = new TransferRequest("TransferRequest", uID, targuID, amount, timestamp, nodeCount -1, requestID);
 				reqQueue.add((Request)transreq);
@@ -451,7 +446,7 @@ public class ReplicatedServerHandler implements ReplicatedBankService.Iface {
 
 	//This is a dedicated function to handle the requests sent from the clients
 	@Override
-	public String multi_transfer (int uID, int targuID, int amount, TimeStamp timestamp, int serverid) {
+	public String multi_transfer (int uID, int targuID, int amount, TimeStamp timestamp, int serverid, long clientid) {
 
 		long starttime = System.currentTimeMillis();
 		System.out.println("Inside multi_transfer of server: " + serverid);
@@ -461,7 +456,7 @@ public class ReplicatedServerHandler implements ReplicatedBankService.Iface {
 
 		synchronized (reqQueue) {
 			clock.SetClockValueForReceive(timestamp);
-			writer.println("CLNT-ID" + "	CLIENT_REQ	" + System.currentTimeMillis() + "	[" + clock.getClockValue() + "," + getID() + "]" + "	Transfer Operation" + "	Source ID: " + uID + "	Target ID: " + targuID + "	Amount " + amount);
+			writer.println(clientid + "	CLIENT_REQ	" + System.currentTimeMillis() + "	[" + clock.getClockValue() + "," + getID() + "]" + "	Transfer Operation" + "	Source ID: " + uID + "	Target ID: " + targuID + "	Amount " + amount);
 			writer.flush();
 			reqID += 1;
 			reqcount += 1;
@@ -482,7 +477,7 @@ public class ReplicatedServerHandler implements ReplicatedBankService.Iface {
 
 					ReplicatedBankService.Client client = new ReplicatedBankService.Client(protocol);
 					clock.SetClockValueForSend();
-					client.multi_transfer_server(uID, targuID, amount, new TimeStamp(clock.getClockValue(),getID()) , id, currentRequest);
+					client.multi_transfer_server(uID, targuID, amount, new TimeStamp(clock.getClockValue(),getID()) , id, currentRequest, clientid);
 
 					System.out.println("serverid: " + serverid + " multi_transfer complete");
 					transport.close();
@@ -511,7 +506,7 @@ public class ReplicatedServerHandler implements ReplicatedBankService.Iface {
 				}catch(InterruptedException e){}
 
 				TransferRequest headReq = (TransferRequest) reqQueue.remove();
-				writer.println("CLNT-ID" + "	PROCESS	" + System.currentTimeMillis() + "	[" + clock.getClockValue() + "," + getID() + "]");
+				writer.println(clientid + "	PROCESS	" + System.currentTimeMillis() + "	[" + clock.getClockValue() + "," + getID() + "]");
 				writer.flush();
 				int src = headReq.getSourceAccUID();
 				int target = headReq.gettargetAccUID();

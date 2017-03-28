@@ -40,12 +40,12 @@ public class BankClient {
       }
 
 
-      void transferRequest(ReplicatedBankService.Client client, PrintWriter writer, int src, int target, int amount, int srvid) throws TException{
+      void transferRequest(long threadid, ReplicatedBankService.Client client, PrintWriter writer, int src, int target, int amount, int srvid) throws TException{
 
 		System.out.println("Inside transferRequest");
-        String s= client.multi_transfer(src,target,amount,new TimeStamp(0,-1), -1);
+        String s= client.multi_transfer(src,target,amount,new TimeStamp(0,-1), -1, threadid);
 		System.out.println("Request Processed: Result: " + s);
-        writer.println("CLNT-ID   " + srvid + "   RSP   " + System.currentTimeMillis() + "  " + s);
+        writer.println(threadid + " " + srvid + "   RSP   " + System.currentTimeMillis() + "  " + s);
         writer.flush();
       }
 
@@ -115,9 +115,9 @@ public class BankClient {
                                     int a = rand.nextInt(10);
                                     int b = rand.nextInt(10);
 									System.out.println("Transfeering from account: " + a + " to account: "+b);
-                                    writer.println("CLNT-ID   " + srvid + "   REQ   " + System.currentTimeMillis() + "	Transfer Operation" + "	Source ID: " + a + "	Target ID: " + b + "	Amount : 10");
+                                    writer.println(Thread.currentThread().getId() + "   " + srvid + "   REQ   " + System.currentTimeMillis() + "	Transfer Operation" + "	Source ID: " + a + "	Target ID: " + b + "	Amount : 10");
                                     writer.flush();
-                                    bc.transferRequest (client, writer, a, b, 10, srvid);
+                                    bc.transferRequest (Thread.currentThread().getId(),client, writer, a, b, 10, srvid);
                                 }
 
 								transport.close();
