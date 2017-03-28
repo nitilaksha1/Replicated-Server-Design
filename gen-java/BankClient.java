@@ -79,8 +79,7 @@ public class BankClient {
 
       try{
             final BankClient bc = new BankClient();
-            final String hostname = args[0];
-            int threadCount = Integer.parseInt(args[2]);
+            int threadCount = Integer.parseInt(args[0]);
             final int iterationCount = 100;
             final String filename = args[1];
             bc.listServers(filename);

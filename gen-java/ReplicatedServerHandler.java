@@ -15,6 +15,8 @@ import clock.*;
 import java.util.Comparator;
 import java.util.PriorityQueue;
 
+
+//Main Request Class that will define the basic structure of a request from the client
 class Request {
 	private TimeStamp 	timestamp;
 	private String 	reqName;
@@ -38,6 +40,7 @@ class Request {
 	
 }
 
+//Different parameters specified as per the types of the request
 class DepositRequest extends Request {
 	private int accountUID;
 	private int amount;
@@ -115,6 +118,7 @@ class ServerInfo{
       }
 }
 
+//This class is used in conjunction with the priority queue to impose ordering based on time stamps
 class TimeStampComparator implements Comparator<Request>
 {
 	@Override
@@ -148,6 +152,7 @@ class TimeStampComparator implements Comparator<Request>
 	}
 }
 
+//This class provides methods to manage and maintain the lamport clock for every process
 class LamportClock {
 
 	private int clockvalue;
@@ -179,12 +184,12 @@ class LamportClock {
 
 }
 
+//This class implements the Service Interface defined by thrift
 public class ReplicatedServerHandler implements ReplicatedBankService.Iface {
 	
 	private LamportClock clock;
 	private volatile PriorityQueue<Request> reqQueue;
 	private TimeStampComparator comparator = new TimeStampComparator();
-	private HashMap<Integer, Integer> map;
 	private HashMap<Integer, ServerInfo> servermap;
 	private ArrayList<ServerInfo> serverlist;
 	private int id;
@@ -199,7 +204,6 @@ public class ReplicatedServerHandler implements ReplicatedBankService.Iface {
 	public ReplicatedServerHandler () {
 
 		clock = new LamportClock();
-		map = new HashMap<>();
 		reqQueue = new PriorityQueue<Request>(100, comparator);
 		bankhandler = new BankHandler();
 		serverlist = new ArrayList<>();
@@ -234,14 +238,17 @@ public class ReplicatedServerHandler implements ReplicatedBankService.Iface {
 	}
 
 	public void setAccountList(ArrayList<Integer> serverList){
+
 		accountList = serverList;
 	}
 
 	public ArrayList<Integer> getAccountList(){
+
 		return accountList;
 	}
 
 	public void initLogFile (String filename) throws FileNotFoundException {
+
 		writer = new PrintWriter (filename + "_" + getID());
 	}
 
@@ -263,6 +270,7 @@ public class ReplicatedServerHandler implements ReplicatedBankService.Iface {
 	@Override
 	public String multi_deposit (int uID, int amount, TimeStamp timestamp, int serverid) {
 
+		//Meant for future implementation
 		return "NA";
 	}
 
@@ -372,6 +380,7 @@ public class ReplicatedServerHandler implements ReplicatedBankService.Iface {
 
 	}
 
+	//This is a dedicated function to handle the requests sent from another server
 	//serverID is used for getting the value of sender server
 	@Override
 	public void multi_transfer_server (int uID, int targuID, int amount, TimeStamp timestamp, int serverid, String requestID) {
@@ -440,8 +449,10 @@ public class ReplicatedServerHandler implements ReplicatedBankService.Iface {
 	}
 
 
+	//This is a dedicated function to handle the requests sent from the clients
 	@Override
 	public String multi_transfer (int uID, int targuID, int amount, TimeStamp timestamp, int serverid) {
+
 		long starttime = System.currentTimeMillis();
 		System.out.println("Inside multi_transfer of server: " + serverid);
 		String currentRequest;
@@ -521,12 +532,12 @@ public class ReplicatedServerHandler implements ReplicatedBankService.Iface {
 
 	@Override
 	public void multi_deposit_ack(TimeStamp reqtimeStamp, int serverid) {
-
+		//Meant for future implementation
 	}
 
 	@Override
 	public void multi_getBalance_ack (TimeStamp reqTimeStamp, int serverid) {
-
+		//Meant for future implementation
 	}
 
 	@Override
@@ -537,7 +548,6 @@ public class ReplicatedServerHandler implements ReplicatedBankService.Iface {
 		synchronized (reqQueue) {
 //			clock.SetClockValueForReceive(timestamp);
 			requestArray = reqQueue.toArray();
-
 
 			for (int i = 0; i < reqQueue.size(); i++) {
 				TransferRequest req = (TransferRequest) requestArray[i];
