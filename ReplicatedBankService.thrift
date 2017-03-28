@@ -12,8 +12,9 @@ service ReplicatedBankService {
    void 	multi_getBalance_ack 	(1:TimeStamp reqTimeStamp, 2:i32 serverid),
    void 	multi_transfer_ack 		(1:string requestID, 2:i32 serverid, 3:TimeStamp timestamp),
    oneway void multi_transfer_server(1:i32 srcuID, 2:i32 targuID, 3:i32 amount, 4:TimeStamp timestamp, 5:i32 serverid, 6:string requestID, 7:i64 clientid)
-   void     halt()
-   void     stop_execution          (1:TimeStamp timestamp)
+   oneway  void     halt            ()
+   oneway void     stop_execution    (1:TimeStamp timestamp)
+   oneway   void     release        (1:string requestID)
    
 }
 

@@ -126,8 +126,10 @@ public class BankClient {
 
                         } catch (TTransportException e) {
 
-                            e.printStackTrace();
-                        }catch (TException e){ e.printStackTrace();}
+
+                        }catch (TException e){
+
+                        }
                           
                     }
                 });
@@ -171,11 +173,15 @@ public class BankClient {
       }//catch(TException e){
          //       e.printStackTrace();}
 		catch(FileNotFoundException e){
-                e.printStackTrace(); 
+
       }catch(UnsupportedEncodingException e){ 
-                e.printStackTrace();
-      } catch (TTransportException e) {}
-        catch (TException e) {}
+
+      } catch (TTransportException e) {
+
+      }
+        catch (TException e) {
+
+        }
       
     }
 }

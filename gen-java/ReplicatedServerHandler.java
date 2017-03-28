@@ -31,12 +31,31 @@ class Request {
 	}
 
 	public String getReqName () {
+
 		return reqName;
 	}
-	public int getAckCount() { return ackCount; }
-	public void setAckCount() {ackCount++;}
-	public TimeStamp getTimestamp() { return timestamp; }
-	public String getReqID() { return reqID; }
+
+	public int getAckCount() {
+
+		return ackCount;
+	}
+
+	public void incrementActCount() {
+		ackCount++;
+	}
+
+	public void setAckCount(int count) {
+
+		ackCount = count;
+	}
+
+	public TimeStamp getTimestamp() {
+		return timestamp;
+	}
+
+	public String getReqID() {
+		return reqID;
+	}
 	
 }
 
@@ -298,14 +317,19 @@ public class ReplicatedServerHandler implements ReplicatedBankService.Iface {
 		synchronized (clock){
 			clock.SetClockValueForReceive(timestamp);
 		}
-
+		int sum=0;
 		ArrayList<Integer> list = getAccountList();
 		for(int i =0 ; i < list.size(); i++){
-			System.out.println("Account id: " + list.get(i) + " Balance: " + bankhandler.getBalance(list.get(i)));
+			int bal = bankhandler.getBalance(list.get(i));
+			sum = sum + bal;
+			System.out.println("Account id: " + list.get(i) + " Balance: " + bal);
+
 		}
 
+		System.out.println("Total Balance :  "+ sum);
+
 		System.out.println("Total number of Client Requests = " + reqcount);
-		System.out.println("Total Response Time = " + totalresponsetime);
+		//System.out.println("Total Response Time = " + totalresponsetime);
 		System.out.println("Average response time = " + (totalresponsetime/reqcount));
 		System.out.println("The pending requests in the Queue: ");
 
@@ -320,6 +344,8 @@ public class ReplicatedServerHandler implements ReplicatedBankService.Iface {
 				System.out.println("Request Id: " + req.getReqID());
 			}
 		}
+
+		System.exit(0);
 
 	}
 
@@ -345,19 +371,24 @@ public class ReplicatedServerHandler implements ReplicatedBankService.Iface {
 				transport.close();
 
 			}
+
 		} catch (TTransportException e) {
-			e.printStackTrace();
+
 		} catch (TException e) {
-			e.printStackTrace();
+
 		}
 
+		int sum = 0;
 		ArrayList<Integer> list = getAccountList();
 		for(int i =0 ; i < list.size(); i++){
-			System.out.println("Account id: " + list.get(i) + " Balance: " + bankhandler.getBalance(list.get(i)));
+			int bal = bankhandler.getBalance(list.get(i));
+			sum = sum + bal;
+			System.out.println("Account id: " + list.get(i) + " Balance: " + bal);
 		}
 
+		System.out.println("Total Balance :  "+ sum);
 		System.out.println("Total number of Client Requests = " + reqcount);
-		System.out.println("Total Response Time = " + totalresponsetime);
+		//System.out.println("Total Response Time = " + totalresponsetime);
 		System.out.println("Average response time = " + (totalresponsetime/reqcount));
 		System.out.println("The pending requests in the Queue: ");
 
@@ -373,6 +404,8 @@ public class ReplicatedServerHandler implements ReplicatedBankService.Iface {
 			}
 		}
 
+		System.exit(0);
+
 	}
 
 	//This is a dedicated function to handle the requests sent from another server
@@ -386,7 +419,7 @@ public class ReplicatedServerHandler implements ReplicatedBankService.Iface {
 
 				writer.println(clientid + "	SRV_REQ		" + serverid + "	" + System.currentTimeMillis() + "	[" + clock.getClockValue() + "," + getID() + "]" + "	Transfer Operation" + "	Source ID: " + uID + "	Target ID: " + targuID + "	Amount " + amount);
 				writer.flush();
-				transreq = new TransferRequest("TransferRequest", uID, targuID, amount, timestamp, nodeCount -1, requestID);
+				transreq = new TransferRequest("TransferRequest", uID, targuID, amount, timestamp, 0, requestID);
 				reqQueue.add((Request)transreq);
 				clock.SetClockValueForReceive(timestamp);
 			}
@@ -484,9 +517,9 @@ public class ReplicatedServerHandler implements ReplicatedBankService.Iface {
 
 					}
 		} catch (TTransportException e) {
-					e.printStackTrace();
+
 				} catch (TException e) {
-					e.printStackTrace();
+
 		}
 
 		while(true){
@@ -513,6 +546,32 @@ public class ReplicatedServerHandler implements ReplicatedBankService.Iface {
 				int amt = headReq.getAmount();
 
 				res = bankhandler.transfer(src,target,amt);
+
+				try{
+					for (int i = 0; i < nodeCount - 1; i++) {
+						String hostname = serverlist.get(i).hostname;
+						int portnumber = serverlist.get(i).portnumber;
+
+						TTransport transport;
+						transport = new TSocket(hostname, portnumber);
+						transport.open();
+
+						TProtocol protocol = new  TBinaryProtocol(transport);
+
+						ReplicatedBankService.Client client = new ReplicatedBankService.Client(protocol);
+						clock.SetClockValueForSend();
+						client.release(currentRequest);
+
+						System.out.println("serverid: " + serverid + " multi_transfer complete");
+						transport.close();
+
+					}
+				} catch (TTransportException e) {
+
+				} catch (TException e) {
+
+				}
+
 				reqQueue.notifyAll();
 				break;
 			}
@@ -540,6 +599,7 @@ public class ReplicatedServerHandler implements ReplicatedBankService.Iface {
 		System.out.println("Ack received");
 
 		Object[] requestArray;
+
 		synchronized (reqQueue) {
 //			clock.SetClockValueForReceive(timestamp);
 			requestArray = reqQueue.toArray();
@@ -548,13 +608,35 @@ public class ReplicatedServerHandler implements ReplicatedBankService.Iface {
 				TransferRequest req = (TransferRequest) requestArray[i];
 
 				if (req.getReqID().equals(requestID)) {
-					req.setAckCount();
+					req.incrementActCount();
 					System.out.println("Iteration ack count: "+ req.getAckCount());
 
 					if (req.getAckCount() == nodeCount - 1) {
 						System.out.println("Notified all");
 						reqQueue.notifyAll();
 					}
+
+					break;
+				}
+			}
+		}
+	}
+
+	@Override
+	public void release (String requestID) {
+
+		Object[] requestArray;
+
+		synchronized (reqQueue) {
+//			clock.SetClockValueForReceive(timestamp);
+			requestArray = reqQueue.toArray();
+
+			for (int i = 0; i < reqQueue.size(); i++) {
+				TransferRequest req = (TransferRequest) requestArray[i];
+
+				if (req.getReqID().equals(requestID)) {
+					req.setAckCount(nodeCount - 1);
+					reqQueue.notifyAll();
 
 					break;
 				}
