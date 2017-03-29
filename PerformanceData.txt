@@ -24,3 +24,57 @@ Server 5:
 ------------
 Total Number of client request = 100
 Average Response time = 10 milliseconds
+
+CASE: 5 SERVERS ON 5 DIFFERENT HOST WITH SINGLE CLIENT (8 THREADS AND 100 REQUESTS PER THREAD):
+-------------------------------------------------------------------------------------------
+Server 1:
+------------
+Total Number of client request = 0
+Average Response time = 0
+
+Server 2:
+------------
+Total Number of client request = 400
+Average Response time = 15 milliseconds
+
+Server 3:
+------------
+Total Number of client request = 100
+Average Response time = 15 milliseconds
+
+Server 4:
+------------
+Total Number of client request = 200
+Average Response time = 15 milliseconds
+
+Server 5:
+------------
+Total Number of client request = 100
+Average Response time = 14 milliseconds
+
+CASE: 5 SERVERS ON 5 DIFFERENT HOST WITH SINGLE CLIENT (100 THREADS AND 100 REQUESTS PER THREAD):
+-------------------------------------------------------------------------------------------
+Server 1:
+------------
+Total Number of client request = 2200
+Average Response time = 75 milliseconds
+
+Server 2:
+------------
+Total Number of client request = 2400
+Average Response time = 75 milliseconds
+
+Server 3:
+------------
+Total Number of client request = 2300
+Average Response time = 75 milliseconds
+
+Server 4:
+------------
+Total Number of client request = 1600
+Average Response time = 75 milliseconds
+
+Server 5:
+------------
+Total Number of client request = 1500
+Average Response time = 74 milliseconds
