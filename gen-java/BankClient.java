@@ -42,9 +42,9 @@ public class BankClient {
 
       void transferRequest(long threadid, ReplicatedBankService.Client client, PrintWriter writer, int src, int target, int amount, int srvid) throws TException{
 
-		System.out.println("Inside transferRequest");
+		//System.out.println("Inside transferRequest");
         String s= client.multi_transfer(src,target,amount,new TimeStamp(0,-1), -1, threadid);
-		System.out.println("Request Processed: Result: " + s);
+		//System.out.println("Request Processed: Result: " + s);
         writer.println(threadid + " " + srvid + "   RSP   " + System.currentTimeMillis() + "  " + s);
         writer.flush();
       }
@@ -103,18 +103,18 @@ public class BankClient {
                                 TTransport transport;
                                 transport = new TSocket(host, port);
                                 transport.open();
-								System.out.println("Open.transport sucess!!");
+								//System.out.println("Open.transport sucess!!");
 
                                 TProtocol protocol = new  TBinaryProtocol(transport);
                                 ReplicatedBankService.Client client = new ReplicatedBankService.Client(protocol);
-								System.out.println("ReplicatedBankService Client instance created!!");
+								//System.out.println("ReplicatedBankService Client instance created!!");
 
 
                                   for(int i=0; i < iterationCount; i++){
 
                                     int a = rand.nextInt(10);
                                     int b = rand.nextInt(10);
-									System.out.println("Transfeering from account: " + a + " to account: "+b);
+									//System.out.println("Transfeering from account: " + a + " to account: "+b);
                                     writer.println(Thread.currentThread().getId() + "   " + srvid + "   REQ   " + System.currentTimeMillis() + "	Transfer Operation" + "	Source ID: " + a + "	Target ID: " + b + "	Amount : 10");
                                     writer.flush();
                                     bc.transferRequest (Thread.currentThread().getId(),client, writer, a, b, 10, srvid);
@@ -159,13 +159,13 @@ public class BankClient {
       TTransport transport;
       transport = new TSocket(halthost, haltport);
       transport.open();
-      System.out.println("Open.transport sucess!!");
+      //System.out.println("Open.transport sucess!!");
 
       TProtocol protocol = new  TBinaryProtocol(transport);
       ReplicatedBankService.Client client = new ReplicatedBankService.Client(protocol);
 
       client.halt();
-
+      writer.println("HALT response received!! Client will close!!");
       transport.close();
 
       writer.close();
