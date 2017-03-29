@@ -2,25 +2,25 @@ CASE: 5 SERVERS ON SAME HOST WITH SINGLE CLIENT (8 THREADS AND 100 REQUESTS PER 
 -------------------------------------------------------------------------------------------
 Server 1:
 ------------
-Total Number of client request = 300
-Average Response time = 15
+Total Number of client request = 0
+Average Response time = 0
 
 Server 2:
 ------------
-Total Number of client request = 300
-Average Response time = 15
+Total Number of client request = 400
+Average Response time = 10 milliseconds
 
-Server 1:
+Server 3:
 ------------
-Total Number of client request = 300
-Average Response time = 15
+Total Number of client request = 100
+Average Response time = 10 milliseconds
 
-Server 1:
+Server 4:
 ------------
-Total Number of client request = 300
-Average Response time = 15
+Total Number of client request = 200
+Average Response time = 10 milliseconds
 
-Server 1:
+Server 5:
 ------------
-Total Number of client request = 300
-Average Response time = 15
+Total Number of client request = 100
+Average Response time = 10 milliseconds
