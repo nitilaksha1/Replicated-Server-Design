@@ -311,6 +311,7 @@ public class ReplicatedServerHandler implements ReplicatedBankService.Iface {
 
 	}
 
+	// This function stops the execution of the replica servers
 	@Override
 	public void stop_execution(TimeStamp timestamp){
 
@@ -356,6 +357,9 @@ public class ReplicatedServerHandler implements ReplicatedBankService.Iface {
 
 	}
 
+	//This function is called when the client wants to stop the execution of all the servers.
+	//The function will multicast this request to all the other replica servers and then proceeds
+	//to terminate itself
 	@Override
 	public void halt() {
 
@@ -608,6 +612,10 @@ public class ReplicatedServerHandler implements ReplicatedBankService.Iface {
 		//Meant for future implementation
 	}
 
+	//This function is called by other servers acknowledging the one of the requests of the current server
+	//The request for which acknowledgement has arrived is given by the requestID string.
+	//For every acknowledgement the particular request is found in the requestQueueu and the ackCount var is updated
+	//The sleeping threads are notified when the ackCount of a paritcular node reaches nodeCount - 1
 	@Override
 	public void multi_transfer_ack	(String requestID, int serverid, TimeStamp timestamp) {
 		//System.out.println("Ack received");
@@ -636,6 +644,9 @@ public class ReplicatedServerHandler implements ReplicatedBankService.Iface {
 		}
 	}
 
+	//This function is called when the server of the original request has completed the its client request and calls this
+	//release function for every other server replica which upon receipt of this message will execute that requestID in their
+	//local queues
 	@Override
 	public void release (String requestID) {
 
