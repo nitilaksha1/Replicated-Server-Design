@@ -2,7 +2,7 @@
 
 This is an implementation of a Replicated Bank Server (using Apache Thrift) which is modeled using Lamport's state machine model to ensure consistency of data on all replicas when queried by the client.
 
-<b><u>Client Process Structure:</u><b>
+<b><u>Client Process Structure:</u></b>
 * When all server processes are started and initialized , the client processes are started.<br />
 * The client provided here is a multithreaded client which takes number of threads and the configuration file as the <br /> parameter. The configuration file provided should contain information about the location of which servers will be used as <br /> primary and replicas. Each entry in the config file is of the form : <hostname> <serverid> <portnumber>. <br />
 * A client will randomly pick one of the servers in the config file and send a request to that server and and wait for the<br /> response before sending the next request.
