@@ -1,11 +1,3 @@
-TEAM NAMES:
-------------
-Name: Akshay Mulkalwar
-Id  : mulka002
-
-Name: Nitilaksha Halakatti
-Id  : halak004
-
 INSTRUCTIONS ON RUNNING AND COMPILING THE PROGRAMS:
 -------------------------------------------------------
 
@@ -80,7 +72,7 @@ PERFORMANCE DATA:
 
 SINGLE HOST:
 -------------
-                                                                                                                                                                                                                                                                                                                                                                   1,1           Top
+                                                                                                    
 1. 1 SERVER CONFIGURATION WITH 24 CLIENT THREADS AND 100 ITERATIONS PER THREAD:
 ------------------------------------------------------------------------------
 Total number of Client Requests = 2400
@@ -131,8 +123,3 @@ SERVER5:
 ---------
 Total number of Client Requests = 200
 Average Response time = 31
-
-
-MULTIPLE HOSTS:
-                                                                                                                                                                                                                                                                                                                                                                   136,1         93%
-
