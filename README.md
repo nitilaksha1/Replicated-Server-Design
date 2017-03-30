@@ -11,3 +11,9 @@ This is an implementation of a Replicated Bank Server (using Apache Thrift) whic
   * It will write to the client logfile a record indicating the operation request and server process<br />
 * After all client threads have terminated, the main thread will send a “HALT” command to the server with ID equal to 0<br />
 * The HALT is communicated and executed using the state machine model in all the server replicas.<br />
+
+<b>Server Process Structure:</b>
+* When a server process is started, it will first create 10 accounts. <br />
+* It will also initialize the balance of each to 1000. <br />
+* The server process will take two command line arguments namely: id of the server (id that represents this server) and <br /> configuration file which will be the same file as used by the client.<br />
+
