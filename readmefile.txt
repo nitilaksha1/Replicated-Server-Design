@@ -76,7 +76,7 @@ SINGLE HOST:
 1. 1 SERVER CONFIGURATION WITH 24 CLIENT THREADS AND 100 ITERATIONS PER THREAD:
 ------------------------------------------------------------------------------
 Total number of Client Requests = 2400
-Average Response time = 2
+Average Response time = 2ms
 
 2. 3 SERVER CONFIGURATION WITH 24 CLIENT THREADS AND 100 ITERATIONS PER THREAD:
 ------------------------------------------------------------------------------
@@ -84,17 +84,17 @@ Average Response time = 2
 SERVER1:
 ---------
 Total number of Client Requests = 700
-Average Response time = 19
+Average Response time = 19ms
 
 SERVER2:
 ---------
 Total number of Client Requests = 600
-Average Response time = 19
+Average Response time = 19ms
 
 SERVER3:
 ---------
 Total number of Client Requests = 1100
-Average Response time = 19
+Average Response time = 19ms
 
 3. 5 SERVER CONFIGURATION WITH 24 CLIENT THREADS AND 100 ITERATIONS PER THREAD:
 ------------------------------------------------------------------------------
@@ -102,24 +102,24 @@ Average Response time = 19
 SERVER1:
 ---------
 Total number of Client Requests = 300
-Average Response time = 31
+Average Response time = 31ms
 
 SERVER2:
 ---------
 Total number of Client Requests = 400
-Average Response time = 31
+Average Response time = 31ms
 
 SERVER3:
 ---------
 Total number of Client Requests = 900
-Average Response time = 31
+Average Response time = 31ms
 
 SERVER4:
 ---------
 Total number of Client Requests = 600
-Average Response time = 31
+Average Response time = 31ms
 
 SERVER5:
 ---------
 Total number of Client Requests = 200
-Average Response time = 31
+Average Response time = 31ms
