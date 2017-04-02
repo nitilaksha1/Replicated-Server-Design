@@ -1,4 +1,4 @@
-balch
+#<Hostname>  <serverid> <portnumber>
 localhost 0 9000
 localhost 1 9001
 localhost 2 9002
