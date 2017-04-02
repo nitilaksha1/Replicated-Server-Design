@@ -1,3 +1,0 @@
-blah
-csel-kh1200-25.cselabs.umn.edu 0 9000
-csel-kh1200-26.cselabs.umn.edu 1 9001
