@@ -1,8 +1,8 @@
-# Replicated Server Design (Primary-Backup Model) -
+# Replicated Server Design (Primary-Backup Model)
 
 This is an implementation of a Replicated Bank Server (using Apache Thrift) which is modeled using Lamport's state machine model to ensure consistency of data on all replicas when queried by the client.
 
-<b><u>Client Process Structure:</u></b>
+## Client Process Structure:
 * When all server processes are started and initialized , the client processes are started.<br />
 * The client provided here is a multithreaded client which takes number of threads and the configuration file as the <br /> parameter. The configuration file provided should contain information about the location of which servers will be used as <br /> primary and replicas. Each entry in the config file is of the form : <hostname> <serverid> <portnumber>. <br />
 * A client will randomly pick one of the servers in the config file and send a request to that server and and wait for the<br /> response before sending the next request.
@@ -12,7 +12,7 @@ This is an implementation of a Replicated Bank Server (using Apache Thrift) whic
 * After all client threads have terminated, the main thread will send a “HALT” command to the server with ID equal to 0<br />
 * The HALT is communicated and executed using the state machine model in all the server replicas.<br />
 
-<b>Server Process Structure:</b>
+## Server Process Structure:
 * When a server process is started, it will first create 10 accounts. <br />
 * It will also initialize the balance of each to 1000. <br />
 * The server process will take two command line arguments namely: id of the server (id that represents this server) and <br /> configuration file which will be the same file as used by the client.<br />
