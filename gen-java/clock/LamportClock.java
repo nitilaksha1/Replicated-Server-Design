@@ -1,7 +1,8 @@
 package clock;
 
+//This class provides methods to manage and maintain the lamport clock for every process
 public class LamportClock {
-	
+
 	private int clockvalue;
 
 	public LamportClock () {
@@ -13,20 +14,20 @@ public class LamportClock {
 	}
 
 	public void SetClockValueForReceive (TimeStamp timestamp) {
-		if (timestamp == 0) {
+		if (timestamp.getTimestamp() == 0) {
 
 			clockvalue += 1;
 			return;
 		}
 
-		if (timestamp > clockvalue)
-			clockvalue = timestamp + 1;
+		if (timestamp.getTimestamp() > clockvalue)
+			clockvalue = timestamp.getTimestamp() + 1;
 		else
 			clockvalue += 1;
 	}
-	
+
 	public int getClockValue(){
 		return clockvalue;
 	}
-	
+
 }
