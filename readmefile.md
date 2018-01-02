@@ -1,22 +1,16 @@
 ## INSTRUCTIONS ON RUNNING AND COMPILING THE PROGRAMS:
--------------------------------------------------------
 
 ## Assumptions:
--------------
 * We have assumed that the config file's first line will be a dummy line stating the format of the every entry in the file.
 * Thus the first line of any custom config file will need to specify the actual hostname and portnumber from line 2 else parsing will fail
 
 ## Compiling:
--------------
 * Extract the .tar or gz folder
 * Change directory to the extracted folder directory
 * Execute compile.sh
 
 ## Test Cases:
---------------------
-
 ### Test Case 1: Single host with 5 server processes and 8 client threads:
------------------------------------------------------------------------
 * Open 6 terminal windows
 * In the each of the five terminal windows, type:
     * Compile using instructions given above
@@ -30,7 +24,6 @@
     * This will start a client with 8 threads
 
 ### Test Case 2: Multi host with 5 server processes and 8 client threads:
------------------------------------------------------------------------
 * Copy the entire .tar file to each of these hosts.
 * Open 6 terminals (one each in a seperate host).
 * Compile the files using the procedure stated above in each of the hosts
@@ -42,7 +35,6 @@
 
 
 ## LOGGING MECHANISMS:
---------------------
 * The client logs can be found in a file called clientLog.txt
 * The server logs can be found in the filename of the form: serverLog_<id> ; where id of the server is appended to the filename representing log for a
 particular server.
