@@ -48,15 +48,11 @@
 particular server.
 
 ## PERFORMANCE DATA:
-## SINGLE HOST:
--------------                                                                                                  
 * 1 SERVER CONFIGURATION WITH 24 CLIENT THREADS AND 100 ITERATIONS PER THREAD:
-------------------------------------------------------------------------------
     * Total number of Client Requests = 2400
     * Average Response time = 2ms
 
 * 3 SERVER CONFIGURATION WITH 24 CLIENT THREADS AND 100 ITERATIONS PER THREAD:
-------------------------------------------------------------------------------
     * SERVER1:
         * Total number of Client Requests = 700
         * Average Response time = 19ms
@@ -67,7 +63,6 @@ particular server.
         * Total number of Client Requests = 1100
         * Average Response time = 19ms
 * 5 SERVER CONFIGURATION WITH 24 CLIENT THREADS AND 100 ITERATIONS PER THREAD:
-------------------------------------------------------------------------------
     * SERVER1:
         * Total number of Client Requests = 300
         * Average Response time = 31ms
