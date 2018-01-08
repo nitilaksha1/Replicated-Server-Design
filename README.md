@@ -22,8 +22,6 @@ This is an implementation of a Replicated Bank Server (using Apache Thrift) whic
 * Thus the first line of any custom config file will need to specify the actual hostname and portnumber from line 2 else parsing will fail
 
 ## Compiling:
-* Extract the .tar or gz folder
-* Change directory to the extracted folder directory
 * Execute compile.sh
 
 ## Test Cases:
